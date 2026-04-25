@@ -1,0 +1,159 @@
+Country,Year,Type Of Sector,Additional Info,"Energy Consumption (UOM:Gwh(Gigawatthour)), Scaling Factor:1","Percentage Of Electricity Consumption In India (UOM:%(Percentage)), Scaling Factor:1","Percentage Of Annual Growth In India (UOM:%(Percentage)), Scaling Factor:1"
+India,"Financial Year (Apr - Mar), 2023",Industry,Provisional,645000,41.8,8.61
+India,"Financial Year (Apr - Mar), 2023",Agriculture,Provisional,255000,16.53,4.57
+India,"Financial Year (Apr - Mar), 2023",Domestic,Provisional,375000,24.3,6.19
+India,"Financial Year (Apr - Mar), 2023",Commercial,Provisional,125000,8.1,6.63
+India,"Financial Year (Apr - Mar), 2023",Traction and Railways,Provisional,33000,2.14,9.9
+India,"Financial Year (Apr - Mar), 2023",Electricity Consumed,Provisional,1543000,100,7.13
+India,"Financial Year (Apr - Mar), 2023",Others,Provisional,110000,7.13,7.69
+India,"Financial Year (Apr - Mar), 2022",Industry,,595000,42.4,6.92
+India,"Financial Year (Apr - Mar), 2022",Agriculture,,240800,17.16,5.41
+India,"Financial Year (Apr - Mar), 2022",Domestic,,362000,25.79,6.54
+India,"Financial Year (Apr - Mar), 2022",Commercial,,105100,7.49,8.22
+India,"Financial Year (Apr - Mar), 2022",Traction and Railways,,25000,1.78,13.97
+India,"Financial Year (Apr - Mar), 2022",Electricity Consumed,,1440311,100,6.58
+India,"Financial Year (Apr - Mar), 2022",Others,,75500,5.38,3.43
+India,"Financial Year (Apr - Mar), 2021",Industry,,556481,42.26,4.86
+India,"Financial Year (Apr - Mar), 2021",Agriculture,,228451,17.35,3.48
+India,"Financial Year (Apr - Mar), 2021",Domestic,,339780,25.8,0.96
+India,"Financial Year (Apr - Mar), 2021",Commercial,,97121,7.38,23.63
+India,"Financial Year (Apr - Mar), 2021",Traction and Railways,,21935,1.67,34.99
+India,"Financial Year (Apr - Mar), 2021",Electricity Consumed,,1316765,100,5.37
+India,"Financial Year (Apr - Mar), 2021",Others,,72996,5.54,7.09
+India,"Financial Year (Apr - Mar), 2020",Industry,,508776,41.36,-5.37
+India,"Financial Year (Apr - Mar), 2020",Agriculture,,221303,17.99,1.75
+India,"Financial Year (Apr - Mar), 2020",Domestic,,330809,26.89,2.03
+India,"Financial Year (Apr - Mar), 2020",Commercial,,86950,7.07,-3.82
+India,"Financial Year (Apr - Mar), 2020",Traction and Railways,,14668,1.19,-3.38
+India,"Financial Year (Apr - Mar), 2020",Electricity Consumed,,1230208,100,-1.69
+India,"Financial Year (Apr - Mar), 2020",Others,,67701,5.5,3.24
+India,"Financial Year (Apr - Mar), 2019",Industry,,532820,42.69,6.2
+India,"Financial Year (Apr - Mar), 2019",Agriculture,,211295,16.93,6.92
+India,"Financial Year (Apr - Mar), 2019",Domestic,,308745,24.74,7.6
+India,"Financial Year (Apr - Mar), 2019",Commercial,,106047,8.5,5.76
+India,"Financial Year (Apr - Mar), 2019",Traction and Railways,,19148,1.53,3.92
+India,"Financial Year (Apr - Mar), 2019",Electricity Consumed,,1248086,100,6.74
+India,"Financial Year (Apr - Mar), 2019",Others,,70031,5.61,8.73
+India,"Financial Year (Apr - Mar), 2018",Industry,,519196,42.91,3.46
+India,"Financial Year (Apr - Mar), 2018",Agriculture,,213409,17.64,4.29
+India,"Financial Year (Apr - Mar), 2018",Domestic,,288243,23.82,2.53
+India,"Financial Year (Apr - Mar), 2018",Commercial,,98228,8.12,3.73
+India,"Financial Year (Apr - Mar), 2018",Traction and Railways,,18837,1.56,-3.5
+India,"Financial Year (Apr - Mar), 2018",Electricity Consumed,,1209972,100,3.11
+India,"Financial Year (Apr - Mar), 2018",Others,,72058,5.96,0.44
+India,"Financial Year (Apr - Mar), 2017",Industry,,468613,41.71,6.5
+India,"Financial Year (Apr - Mar), 2017",Agriculture,,199247,17.74,6.88
+India,"Financial Year (Apr - Mar), 2017",Domestic,,273545,24.35,6.93
+India,"Financial Year (Apr - Mar), 2017",Commercial,,93755,8.35,7.03
+India,"Financial Year (Apr - Mar), 2017",Traction and Railways,,17433,1.55,-8.46
+India,"Financial Year (Apr - Mar), 2017",Electricity Consumed,,1123427,100,6.51
+India,"Financial Year (Apr - Mar), 2017",Others,,70834,6.31,6.7
+India,"Financial Year (Apr - Mar), 2016",Industry,,440206,41.48,0.74
+India,"Financial Year (Apr - Mar), 2016",Agriculture,,191151,18.01,12.87
+India,"Financial Year (Apr - Mar), 2016",Domestic,,255826,24.11,8.55
+India,"Financial Year (Apr - Mar), 2016",Commercial,,89825,8.46,14.29
+India,"Financial Year (Apr - Mar), 2016",Traction and Railways,,15683,1.48,3.75
+India,"Financial Year (Apr - Mar), 2016",Electricity Consumed,,1061183,100,6.5
+India,"Financial Year (Apr - Mar), 2016",Others,,68493,6.45,9.99
+India,"Financial Year (Apr - Mar), 2015",Industry,,423523,42.3,1.24
+India,"Financial Year (Apr - Mar), 2015",Agriculture,,173185,17.3,2.53
+India,"Financial Year (Apr - Mar), 2015",Domestic,,238876,23.86,9.88
+India,"Financial Year (Apr - Mar), 2015",Commercial,,86037,8.59,9.75
+India,"Financial Year (Apr - Mar), 2015",Traction and Railways,,16594,1.66,2.58
+India,"Financial Year (Apr - Mar), 2015",Electricity Consumed,,1001191,100,5.55
+India,"Financial Year (Apr - Mar), 2015",Others,,62976,6.29,27.77
+India,"Financial Year (Apr - Mar), 2014",Industry,,418346,44.11,8.83
+India,"Financial Year (Apr - Mar), 2014",Agriculture,,168913,17.81,10.59
+India,"Financial Year (Apr - Mar), 2014",Domestic,,217405,22.92,8.79
+India,"Financial Year (Apr - Mar), 2014",Commercial,,78391,8.22,5.58
+India,"Financial Year (Apr - Mar), 2014",Traction and Railways,,16177,1.71,4.1
+India,"Financial Year (Apr - Mar), 2014",Electricity Consumed,,948522,100,8.48
+India,"Financial Year (Apr - Mar), 2014",Others,,49289,5.2,3.54
+India,"Financial Year (Apr - Mar), 2013",Industry,,384418,43.97,5.71
+India,"Financial Year (Apr - Mar), 2013",Agriculture,,152744,17.47,7.92
+India,"Financial Year (Apr - Mar), 2013",Domestic,,199842,22.86,7.92
+India,"Financial Year (Apr - Mar), 2013",Commercial,,74247,8.49,5.73
+India,"Financial Year (Apr - Mar), 2013",Traction and Railways,,15540,1.78,7.67
+India,"Financial Year (Apr - Mar), 2013",Electricity Consumed,,874209,100,7.07
+India,"Financial Year (Apr - Mar), 2013",Others,,47418,5.42,14.72
+India,"Financial Year (Apr - Mar), 2012",Industry,,365989,44.4,8.62
+India,"Financial Year (Apr - Mar), 2012",Agriculture,,147462,17.89,8.62
+India,"Financial Year (Apr - Mar), 2012",Domestic,,183700,22.29,8.62
+India,"Financial Year (Apr - Mar), 2012",Commercial,,72794,8.83,8.62
+India,"Financial Year (Apr - Mar), 2012",Traction and Railways,,14100,1.71,8.63
+India,"Financial Year (Apr - Mar), 2012",Electricity Consumed,,824301,100,8.62
+India,"Financial Year (Apr - Mar), 2012",Others,,40256,4.88,8.62
+India,"Financial Year (Apr - Mar), 2011",Industry,,352291,44.87,27.1
+India,"Financial Year (Apr - Mar), 2011",Agriculture,,140960,17.95,1.28
+India,"Financial Year (Apr - Mar), 2011",Domestic,,171104,21.79,0.42
+India,"Financial Year (Apr - Mar), 2011",Commercial,,65381,8.33,2.94
+India,"Financial Year (Apr - Mar), 2011",Traction and Railways,,14206,1.81,2.31
+India,"Financial Year (Apr - Mar), 2011",Electricity Consumed,,785194,100,11.26
+India,"Financial Year (Apr - Mar), 2011",Others,,41252,5.25,-0.95
+India,"Financial Year (Apr - Mar), 2010",Industry,,272589,39.25,15.14
+India,"Financial Year (Apr - Mar), 2010",Agriculture,,131967,19,9.78
+India,"Financial Year (Apr - Mar), 2010",Domestic,,169326,24.39,15.91
+India,"Financial Year (Apr - Mar), 2010",Commercial,,67289,9.69,11.04
+India,"Financial Year (Apr - Mar), 2010",Traction and Railways,,14003,2.02,12.85
+India,"Financial Year (Apr - Mar), 2010",Electricity Consumed,,694392,,13.34
+India,"Financial Year (Apr - Mar), 2010",Others,,39218,5.65,7.17
+India,"Financial Year (Apr - Mar), 2009",Industry,,236752,38.64,
+India,"Financial Year (Apr - Mar), 2009",Agriculture,,120209,19.62,
+India,"Financial Year (Apr - Mar), 2009",Domestic,,146080,23.85,
+India,"Financial Year (Apr - Mar), 2009",Commercial,,60600,9.89,
+India,"Financial Year (Apr - Mar), 2009",Traction and Railways,,12408,2.03,
+India,"Financial Year (Apr - Mar), 2009",Others,,36595,5.97,
+India,"Financial Year (Apr - Mar), 2008",Industry,,209474,37.81,
+India,"Financial Year (Apr - Mar), 2008",Agriculture,,109610,19.79,
+India,"Financial Year (Apr - Mar), 2008",Domestic,,131720,23.78,
+India,"Financial Year (Apr - Mar), 2008",Commercial,,54189,9.78,
+India,"Financial Year (Apr - Mar), 2008",Traction and Railways,,11425,2.06,
+India,"Financial Year (Apr - Mar), 2008",Others,,37577,6.78,
+India,"Financial Year (Apr - Mar), 2007",Industry,,189424,37.74,
+India,"Financial Year (Apr - Mar), 2007",Agriculture,,104182,20.75,
+India,"Financial Year (Apr - Mar), 2007",Domestic,,120918,24.09,
+India,"Financial Year (Apr - Mar), 2007",Commercial,,46685,9.3,
+India,"Financial Year (Apr - Mar), 2007",Traction and Railways,,11108,2.21,
+India,"Financial Year (Apr - Mar), 2007",Others,,29660,5.91,
+India,"Financial Year (Apr - Mar), 2005",Industry,,151557,36.8,
+India,"Financial Year (Apr - Mar), 2005",Agriculture,,90292,21.92,
+India,"Financial Year (Apr - Mar), 2005",Domestic,,100090,24.3,
+India,"Financial Year (Apr - Mar), 2005",Commercial,,35965,8.73,
+India,"Financial Year (Apr - Mar), 2005",Traction and Railways,,9944,2.41,
+India,"Financial Year (Apr - Mar), 2005",Others,,24039,5.84,
+India,"Financial Year (Apr - Mar), 2000",Industry,,107622,33.99,
+India,"Financial Year (Apr - Mar), 2000",Agriculture,,84729,26.76,
+India,"Financial Year (Apr - Mar), 2000",Domestic,,75629,23.89,
+India,"Financial Year (Apr - Mar), 2000",Commercial,,22545,7.12,
+India,"Financial Year (Apr - Mar), 2000",Traction and Railways,,8213,2.59,
+India,"Financial Year (Apr - Mar), 2000",Others,,17862,5.64,
+India,"Financial Year (Apr - Mar), 1995",Industry,,104693,37.79,
+India,"Financial Year (Apr - Mar), 1995",Agriculture,,85732,30.95,
+India,"Financial Year (Apr - Mar), 1995",Domestic,,51733,18.67,
+India,"Financial Year (Apr - Mar), 1995",Commercial,,16996,6.14,
+India,"Financial Year (Apr - Mar), 1995",Traction and Railways,,6223,2.25,
+India,"Financial Year (Apr - Mar), 1995",Others,,11652,4.21,
+India,"Financial Year (Apr - Mar), 1990",Industry,,84209,44.24,
+India,"Financial Year (Apr - Mar), 1990",Agriculture,,50321,26.44,
+India,"Financial Year (Apr - Mar), 1990",Domestic,,31982,16.8,
+India,"Financial Year (Apr - Mar), 1990",Commercial,,11181,5.87,
+India,"Financial Year (Apr - Mar), 1990",Traction and Railways,,4112,2.16,
+India,"Financial Year (Apr - Mar), 1990",Others,,8552,4.49,
+India,"Financial Year (Apr - Mar), 1985",Industry,,66980,54.41,
+India,"Financial Year (Apr - Mar), 1985",Agriculture,,23422,19.03,
+India,"Financial Year (Apr - Mar), 1985",Domestic,,17258,14.02,
+India,"Financial Year (Apr - Mar), 1985",Commercial,,7290,5.92,
+India,"Financial Year (Apr - Mar), 1985",Traction and Railways,,3182,2.58,
+India,"Financial Year (Apr - Mar), 1985",Others,,4967,4.03,
+India,"Financial Year (Apr - Mar), 1980",Industry,,48069,58.36,
+India,"Financial Year (Apr - Mar), 1980",Agriculture,,14489,17.59,
+India,"Financial Year (Apr - Mar), 1980",Domestic,,9246,11.23,
+India,"Financial Year (Apr - Mar), 1980",Commercial,,4682,5.68,
+India,"Financial Year (Apr - Mar), 1980",Traction and Railways,,2266,2.75,
+India,"Financial Year (Apr - Mar), 1980",Others,,3615,4.39,
+India,"Financial Year (Apr - Mar), 1970",Industry,,29579,67.65,
+India,"Financial Year (Apr - Mar), 1970",Agriculture,,4470,10.22,
+India,"Financial Year (Apr - Mar), 1970",Domestic,,3840,8.78,
+India,"Financial Year (Apr - Mar), 1970",Commercial,,2573,5.88,
+India,"Financial Year (Apr - Mar), 1970",Traction and Railways,,1364,3.12,
+India,"Financial Year (Apr - Mar), 1970",Others,,1898,4.34,
