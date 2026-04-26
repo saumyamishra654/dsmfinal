@@ -1,10 +1,3 @@
-"""
-Ingests telecom subscription data (provider-level) into MongoDB.
-
-Run directly:
-    python src/database_loaders/load_mongo.py
-"""
-
 import re
 import math
 import pandas as pd
@@ -18,10 +11,6 @@ MONGO_URI = "mongodb://localhost:27017"
 DB_NAME = "dsm"
 COLLECTION_NAME = "telecom_subscriptions"
 
-# ---------------------------------------------------------------------------
-# Date parsing (duplicated from data_cleaning.py to keep loaders standalone)
-# ---------------------------------------------------------------------------
-
 _MONTH_MAP = {
     "january": 1, "february": 2, "march": 3, "april": 4,
     "may": 5, "june": 6, "july": 7, "august": 8,
@@ -29,14 +18,16 @@ _MONTH_MAP = {
 }
 
 
-def _parse_year(raw: str) -> int:
+# extracts the 4-digit year from a TRAI year string
+def _parse_year(raw):
     m = re.search(r"(\d{4})", str(raw))
     if not m:
         raise ValueError(f"Cannot parse year from: {raw!r}")
     return int(m.group(1))
 
 
-def _parse_month(raw: str) -> int:
+# extracts the month name from a TRAI month string and maps to int
+def _parse_month(raw):
     m = re.search(r"([A-Za-z]+)", str(raw))
     if not m:
         raise ValueError(f"Cannot parse month from: {raw!r}")
@@ -46,65 +37,49 @@ def _parse_month(raw: str) -> int:
     return _MONTH_MAP[name]
 
 
-# ---------------------------------------------------------------------------
-# Provider name normalization — 47 raw names → ~15 canonical providers
-# ---------------------------------------------------------------------------
-
 PROVIDER_MAP = {
-    # Bharti/Airtel family
     "Bharti": "Bharti Airtel",
     "Bharti Airtel": "Bharti Airtel",
     "Bharti Airtel (including Tata Tele.)": "Bharti Airtel",
     "Bharti Airtel Ltd.": "Bharti Airtel",
-    # Reliance family
     "Reliance": "Reliance Communications",
     "Reliance Com.": "Reliance Communications",
     "Reliance Com. ": "Reliance Communications",
     "Reliance Communications": "Reliance Communications",
     "Reliance Telecom/ Reliance Communication": "Reliance Communications",
     "Reliance Jio": "Reliance Jio",
-    # Vodafone family
     "Vodafone": "Vodafone",
     "Vodafone Essar": "Vodafone",
     "Vodafone Idea": "Vodafone Idea",
-    # Idea family
     "Idea": "Idea Cellular",
     "Idea/ Spice": "Idea Cellular",
     "Spice": "Idea Cellular",
-    # Tata family
     "Tata": "Tata Teleservices",
     "Tata Tele.": "Tata Teleservices",
     "Tata Teleservices": "Tata Teleservices",
     "Teleservices Ltd": "Tata Teleservices",
-    # HFCL family
     "HFCL": "HFCL Infotel",
     "HFCL Infotel": "HFCL Infotel",
     "HFCL infotel": "HFCL Infotel",
     "Quadrant": "HFCL Infotel",
     "Quadrant (HFCL)": "HFCL Infotel",
-    # Loop family
     "Loop": "Loop Mobile",
     "Loop Mobile(BPL Mobile)": "Loop Mobile",
     "Loop Telecom Pvt. Ltd.": "Loop Mobile",
     "BPL Mobile": "Loop Mobile",
-    # Sistema family
     "Sistema": "Sistema Shyam",
     "Sistema Shyam": "Sistema Shyam",
     "Sistema Shyam Teleservices Ltd": "Sistema Shyam",
     "Shyam Telelink": "Sistema Shyam",
     "S-Tel": "Sistema Shyam",
-    # Aircel family
     "Aircel": "Aircel",
     "Aircel/Dishnet": "Aircel",
-    # Telenor/Uninor family
     "Uninor": "Telenor",
     "Unitech": "Telenor",
     "Telenor": "Telenor",
     "Telewings": "Telenor",
-    # Etisalat family
     "Etisalat": "Etisalat",
     "Etisalat/Allianz": "Etisalat",
-    # Standalone
     "BSNL": "BSNL",
     "BSNL (Except CDMA)": "BSNL",
     "BSNL (VNOs)": "BSNL VNOs",
@@ -112,7 +87,6 @@ PROVIDER_MAP = {
     "Videocon": "Videocon",
 }
 
-# Numeric columns that should be omitted from the document when NaN
 _NUMERIC_FIELDS = {
     "Wireless Subscribers (UOM:Number), Scaling Factor:1": "wireless_subscribers",
     "Proportion Of Vlr On A Peak Day (UOM:%(Percentage)), Scaling Factor:1": "vlr_proportion",
@@ -120,12 +94,8 @@ _NUMERIC_FIELDS = {
 }
 
 
-# ---------------------------------------------------------------------------
-# Core loading logic
-# ---------------------------------------------------------------------------
-
-def _row_to_doc(row: pd.Series) -> dict:
-    """Convert one CSV row into a MongoDB document, omitting NaN numeric fields."""
+# converts one CSV row into a MongoDB document, omitting NaN numeric fields
+def _row_to_doc(row):
     provider_raw = row["Service Provider"]
     provider = PROVIDER_MAP.get(provider_raw, provider_raw)
 
@@ -145,8 +115,8 @@ def _row_to_doc(row: pd.Series) -> dict:
     return doc
 
 
-def load_to_mongo() -> int:
-    """Read the raw CSV, transform rows into documents, and bulk-insert into MongoDB."""
+# reads the raw CSV, transforms rows into documents, and bulk-inserts into MongoDB
+def load_to_mongo():
     if not CSV_PATH.exists():
         raise FileNotFoundError(
             f"Raw CSV not found at {CSV_PATH}. "
@@ -157,7 +127,6 @@ def load_to_mongo() -> int:
     df = pd.read_csv(CSV_PATH)
     print(f"  {len(df)} rows loaded from CSV")
 
-    # Show provider normalization summary
     raw_providers = set(df["Service Provider"].unique())
     unmapped = raw_providers - set(PROVIDER_MAP.keys())
     if unmapped:
@@ -170,7 +139,6 @@ def load_to_mongo() -> int:
     client = MongoClient(MONGO_URI)
     db = client[DB_NAME]
 
-    # Drop existing collection for idempotent reload
     db.drop_collection(COLLECTION_NAME)
     print(f"  Dropped existing '{COLLECTION_NAME}' collection (if any)")
 
@@ -178,7 +146,6 @@ def load_to_mongo() -> int:
     collection.insert_many(docs)
     print(f"  Inserted {len(docs)} documents")
 
-    # Create indexes
     collection.create_index(
         [("state", ASCENDING), ("year", ASCENDING), ("month", ASCENDING)],
         name="idx_state_year_month",
@@ -186,7 +153,6 @@ def load_to_mongo() -> int:
     collection.create_index([("provider", ASCENDING)], name="idx_provider")
     print("  Created indexes: idx_state_year_month, idx_provider")
 
-    # Summary
     n_providers = len(collection.distinct("provider"))
     n_states = len(collection.distinct("state"))
     print(f"\nSummary:")

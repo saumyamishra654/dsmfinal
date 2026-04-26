@@ -1,10 +1,3 @@
-"""
-Cleans all raw CSVs and writes typed DataFrames to cleaned_datasets/*.pkl
-
-Run directly:
-    python src/data/clean.py
-"""
-
 import re
 import pandas as pd
 from pathlib import Path
@@ -13,10 +6,6 @@ ROOT = Path(__file__).resolve().parents[2]
 DATASETS = ROOT / "datasets"
 CLEANED = ROOT / "cleaned_datasets"
 
-# ---------------------------------------------------------------------------
-# Date parsing
-# ---------------------------------------------------------------------------
-
 _MONTH_MAP = {
     "january": 1, "february": 2, "march": 3, "april": 4,
     "may": 5, "june": 6, "july": 7, "august": 8,
@@ -24,14 +13,16 @@ _MONTH_MAP = {
 }
 
 
-def _parse_year(raw: str) -> int:
+# extracts the 4-digit year from a TRAI year string
+def _parse_year(raw):
     m = re.search(r"(\d{4})", str(raw))
     if not m:
         raise ValueError(f"Cannot parse year from: {raw!r}")
     return int(m.group(1))
 
 
-def _parse_month(raw: str) -> int:
+# extracts the month name from a TRAI month string and maps to int
+def _parse_month(raw):
     m = re.search(r"([A-Za-z]+)", str(raw))
     if not m:
         raise ValueError(f"Cannot parse month from: {raw!r}")
@@ -41,20 +32,17 @@ def _parse_month(raw: str) -> int:
     return _MONTH_MAP[name]
 
 
-def _make_date(year: int, month: int) -> str:
+# builds the YYYY-MM-01 date string for SQL DATE columns
+def _make_date(year, month):
     return f"{year:04d}-{month:02d}-01"
 
 
-def _fy_to_cy_year(fy_year: int, month: int) -> int:
-    """FY label → calendar year. Months Apr–Dec belong to (fy_year - 1)."""
+# converts a Financial Year label to calendar year (Apr-Dec belong to fy_year - 1)
+def _fy_to_cy_year(fy_year, month):
     return fy_year - 1 if month >= 4 else fy_year
 
 
-# ---------------------------------------------------------------------------
-# Circle → State mapping
-# ---------------------------------------------------------------------------
-
-CIRCLE_TO_STATE: dict[str, str] = {
+CIRCLE_TO_STATE = {
     "Andhra Pradesh":       "Andhra Pradesh",
     "Assam":                "Assam",
     "Bihar":                "Bihar",
@@ -77,13 +65,11 @@ CIRCLE_TO_STATE: dict[str, str] = {
     "West Bengal":          "West Bengal",
 }
 
-PANEL_STATES: list[str] = sorted(set(CIRCLE_TO_STATE.values()))
+PANEL_STATES = sorted(set(CIRCLE_TO_STATE.values()))
 
-# ---------------------------------------------------------------------------
-# Cleaning functions
-# ---------------------------------------------------------------------------
 
-def _clean_tele_density() -> pd.DataFrame:
+# cleans the area-wise tele-density CSV into a typed DataFrame
+def _clean_tele_density():
     df = pd.read_csv(DATASETS / "area-wise tele density.csv")
     df.columns = ["country", "year_raw", "month_raw", "circle", "tele_density"]
 
@@ -98,19 +84,19 @@ def _clean_tele_density() -> pd.DataFrame:
     return df[["state_name", "year", "month", "date", "tele_density"]].reset_index(drop=True)
 
 
-def _clean_wired_wireless() -> pd.DataFrame:
+# cleans the wired/wireless CSV and aggregates UP East + UP West
+def _clean_wired_wireless():
     df = pd.read_csv(DATASETS / "wired, wireless telephone.csv")
     df.columns = ["country", "year_raw", "month_raw", "circle",
                   "wireline_millions", "wireless_millions", "pct_share"]
 
     df["month"]      = df["month_raw"].apply(_parse_month)
-    df["year"]       = df["year_raw"].apply(_parse_year)   # CY format, no FY shift
+    df["year"]       = df["year_raw"].apply(_parse_year)
     df["date"]       = pd.to_datetime(df.apply(lambda r: _make_date(r["year"], r["month"]), axis=1))
     df["state_name"] = df["circle"].map(CIRCLE_TO_STATE)
 
     df = df[df["state_name"].notna()].copy()
 
-    # Aggregate UP East + UP West into one row per month
     up = df["state_name"] == "Uttar Pradesh"
     up_agg = (
         df[up]
@@ -126,7 +112,8 @@ def _clean_wired_wireless() -> pd.DataFrame:
                 "wireline_millions", "wireless_millions", "pct_share"]].reset_index(drop=True)
 
 
-def _clean_education_ger() -> pd.DataFrame:
+# cleans the education GER CSV
+def _clean_education_ger():
     df = pd.read_csv(DATASETS / "education-enrolment.csv")
     df.columns = ["country", "state_name", "year_raw", "gender", "category", "ger"]
 
@@ -136,20 +123,22 @@ def _clean_education_ger() -> pd.DataFrame:
     return df[["state_name", "year", "gender", "category", "ger"]].reset_index(drop=True)
 
 
-def _clean_digital_transactions() -> pd.DataFrame:
+# cleans the digital transactions CSV
+def _clean_digital_transactions():
     df = pd.read_csv(DATASETS / "digital transactions.csv")
     df.columns = ["country", "year_raw", "month_raw", "ministry", "project",
                   "digital_txn_crores", "bhim_txn_crores", "debit_card_crores"]
 
     df["month"] = df["month_raw"].apply(_parse_month)
-    df["year"]  = df["year_raw"].apply(_parse_year)   # CY format
+    df["year"]  = df["year_raw"].apply(_parse_year)
     df["date"]  = pd.to_datetime(df.apply(lambda r: _make_date(r["year"], r["month"]), axis=1))
 
     return df[["year", "month", "date",
                "digital_txn_crores", "bhim_txn_crores", "debit_card_crores"]].reset_index(drop=True)
 
 
-def _clean_electricity() -> pd.DataFrame:
+# cleans the sector-wise electricity consumption CSV
+def _clean_electricity():
     df = pd.read_csv(DATASETS / "sector-wise electricity consumption.csv")
     df.columns = ["country", "year_raw", "sector", "additional_info",
                   "energy_gwh", "pct_consumption", "pct_growth"]
@@ -160,10 +149,6 @@ def _clean_electricity() -> pd.DataFrame:
     return df[["year", "sector", "additional_info",
                "energy_gwh", "pct_consumption", "pct_growth"]].reset_index(drop=True)
 
-
-# ---------------------------------------------------------------------------
-# Main — write all cleaned datasets to cleaned_datasets/
-# ---------------------------------------------------------------------------
 
 CLEANERS = {
     "tele_density":        _clean_tele_density,

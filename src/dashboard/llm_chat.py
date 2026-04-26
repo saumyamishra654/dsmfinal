@@ -1,12 +1,3 @@
-"""
-LLM-powered sidebar chat for the Digital India Dashboard.
-
-Lets the user ask natural-language questions about the underlying
-SQLite and MongoDB data.  Claude generates Python code that is
-executed locally; the result (DataFrame, Plotly figure, or plain
-text) is rendered in the main area.
-"""
-
 import re
 import traceback
 from pathlib import Path
@@ -20,10 +11,6 @@ import sqlite3
 import streamlit as st
 from langchain_anthropic import ChatAnthropic
 from langchain_core.messages import HumanMessage, SystemMessage
-
-# ---------------------------------------------------------------------------
-# Constants
-# ---------------------------------------------------------------------------
 
 DB_PATH = str(Path(__file__).resolve().parents[2] / "db" / "sqlite" / "dsm.db")
 MONGO_URI = "mongodb://localhost:27017"
@@ -71,26 +58,18 @@ QUICK_QUERIES = [
     "Top 5 states by tele-density in 2021",
     "Compare wireless growth: Bihar vs Maharashtra",
     "Monthly UPI share trend",
-    "Which provider grew fastest after 2016?",
+    "Show me Jio's growth post 2016.",
 ]
 
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
 
-
-def _extract_code(text: str) -> str:
-    """Pull Python code from markdown fences; fall back to raw text."""
+# pulls Python code from markdown fences and falls back to raw text
+def _extract_code(text):
     match = re.search(r"```(?:python)?\s*\n(.*?)```", text, re.DOTALL)
     return match.group(1).strip() if match else text.strip()
 
 
-def _run_code(code: str) -> tuple:
-    """Run generated code in a namespace and return (result, error).
-
-    This intentionally uses exec() — the user explicitly requested
-    dynamic code execution for a locally-hosted one-time demo.
-    """
+# runs generated code in a namespace and returns (result, error)
+def _run_code(code):
     namespace = {
         "pd": pd,
         "np": np,
@@ -103,16 +82,15 @@ def _run_code(code: str) -> tuple:
         "mongo_db": MONGO_DB,
     }
     try:
-        # Dynamic execution of LLM-generated code (local demo only)
-        run = exec  # noqa: S102
+        run = exec
         run(code, namespace)
         return namespace.get("result"), None
     except Exception:
         return None, traceback.format_exc()
 
 
-def _ask_llm(question: str, api_key: str) -> str:
-    """Send *question* to Claude and return the raw response text."""
+# sends question to Claude and returns the raw response text
+def _ask_llm(question, api_key):
     llm = ChatAnthropic(
         model="claude-sonnet-4-20250514",
         api_key=api_key,
@@ -126,21 +104,13 @@ def _ask_llm(question: str, api_key: str) -> str:
     return response.content
 
 
-# ---------------------------------------------------------------------------
-# Streamlit UI
-# ---------------------------------------------------------------------------
-
-
-def render_sidebar_chat() -> None:
-    """Render the LLM chat interface (sidebar + main area components)."""
-
-    # ---- Initialise session state ----
+# renders the LLM chat interface (sidebar + main area components)
+def render_sidebar_chat():
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = []
     if "pending_query" not in st.session_state:
         st.session_state.pending_query = None
 
-    # ---- Sidebar controls ----
     with st.sidebar:
         st.markdown("### Ask the Data")
         api_key = st.text_input(
@@ -156,16 +126,13 @@ def render_sidebar_chat() -> None:
             cols = st.columns(2)
             for idx, q in enumerate(QUICK_QUERIES):
                 with cols[idx % 2]:
-                    if st.button(q, key=f"quick_{idx}", use_container_width=True):
+                    if st.button(q, key=f"quick_{idx}", width="stretch"):
                         st.session_state.pending_query = q
 
-    # ---- Chat input (must be in main area per Streamlit requirement) ----
     user_input = st.chat_input("Ask a question about the data ...")
 
-    # Determine the active query (explicit input takes precedence)
     query = user_input or st.session_state.pop("pending_query", None)
 
-    # ---- Process query ----
     if query and api_key:
         with st.spinner("Thinking ..."):
             raw_response = _ask_llm(query, api_key)
@@ -181,7 +148,6 @@ def render_sidebar_chat() -> None:
             }
         )
 
-    # ---- Display chat history in main area ----
     for entry in st.session_state.chat_history:
         st.markdown(f"**Q:** {entry['question']}")
 
@@ -192,7 +158,7 @@ def render_sidebar_chat() -> None:
             if isinstance(result, pd.DataFrame):
                 st.dataframe(result)
             elif hasattr(result, "to_plotly_json"):
-                st.plotly_chart(result, use_container_width=True)
+                st.plotly_chart(result, width="stretch")
             else:
                 st.write(result)
 

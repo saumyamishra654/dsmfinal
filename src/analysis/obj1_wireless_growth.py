@@ -1,12 +1,3 @@
-"""
-Objective 1: Wireless subscriber growth + Jio structural break detection (2008-2021)
-
-Data source: MongoDB telecom_subscriptions collection
-
-Run directly:
-    python src/analysis/obj1_wireless_growth.py
-"""
-
 import sys
 from pathlib import Path
 
@@ -29,15 +20,8 @@ MONGO_URI = "mongodb://localhost:27017"
 DB_NAME = "dsm"
 
 
-# ---------------------------------------------------------------------------
-# Shared utility — imported by obj3 and obj5
-# ---------------------------------------------------------------------------
-
-def get_national_wireless_ts(db=None) -> pd.DataFrame:
-    """National wireless subscriber time series from MongoDB (2008-2021).
-
-    Returns DataFrame with columns [year, month, date, total_wireless].
-    """
+# gets wireless subscriber time series from MongoDB (2008-2021).
+def get_national_wireless_ts(db=None):
     if db is None:
         client = MongoClient(MONGO_URI)
         db = client[DB_NAME]
@@ -62,42 +46,26 @@ def get_national_wireless_ts(db=None) -> pd.DataFrame:
     return df.sort_values("date").reset_index(drop=True)
 
 
-# ---------------------------------------------------------------------------
-# Structural break detection
-# ---------------------------------------------------------------------------
-
-def detect_structural_breaks(series: np.ndarray, n_bkps: int = 2) -> list:
-    """Find structural breakpoints using Binseg (L2 cost model).
-
-    Returns list of breakpoint indices (exclusive end of each segment).
-    With n_bkps=2, expects to find both the ~2011 mobile explosion break
-    and the ~2016 Jio entry break.
-    """
+# detects structural breakpoints
+def detect_structural_breaks(series, n_bkps=2):
     algo = rpt.Binseg(model="l2", min_size=12).fit(series)
     result = algo.predict(n_bkps=n_bkps)
-    return result[:-1]  # drop the last element (always == len(series))
+    return result[:-1]
 
 
-def chow_test(y: np.ndarray, break_idx: int) -> tuple:
-    """Chow test for structural break at break_idx.
-
-    Tests H0: same linear trend across both sub-periods.
-    Returns (F_statistic, p_value).
-    """
+# chow test to check for statistical significance
+def chow_test(y, break_idx):
     n = len(y)
     x = np.arange(n)
-    k = 2  # intercept + slope
+    k = 2
 
-    # Pooled regression
     c_pool = np.polyfit(x, y, 1)
     rss_pool = np.sum((y - np.polyval(c_pool, x)) ** 2)
 
-    # Sub-sample 1
     x1, y1 = x[:break_idx], y[:break_idx]
     c1 = np.polyfit(x1, y1, 1)
     rss1 = np.sum((y1 - np.polyval(c1, x1)) ** 2)
 
-    # Sub-sample 2
     x2, y2 = x[break_idx:], y[break_idx:]
     c2 = np.polyfit(x2, y2, 1)
     rss2 = np.sum((y2 - np.polyval(c2, x2)) ** 2)
@@ -109,23 +77,15 @@ def chow_test(y: np.ndarray, break_idx: int) -> tuple:
     return f_stat, p_value
 
 
-# ---------------------------------------------------------------------------
-# CAGR
-# ---------------------------------------------------------------------------
-
-def compute_cagr(start_val: float, end_val: float, years: float) -> float:
-    """Compound annual growth rate."""
+# compound annual growth rate
+def compute_cagr(start_val, end_val, years):
     if start_val <= 0 or years <= 0:
         return float("nan")
     return (end_val / start_val) ** (1 / years) - 1
 
 
-# ---------------------------------------------------------------------------
-# State-level growth analysis
-# ---------------------------------------------------------------------------
-
-def get_state_growth_rates(db, break_year: int, break_month: int) -> pd.DataFrame:
-    """Pre/post-break CAGR per state from MongoDB."""
+# pre/post-break CAGR per state from MongoDB
+def get_state_growth_rates(db, break_year, break_month):
     pipeline = [
         {"$match": {"wireless_subscribers": {"$exists": True}}},
         {"$group": {
@@ -172,12 +132,8 @@ def get_state_growth_rates(db, break_year: int, break_month: int) -> pd.DataFram
     return pd.DataFrame(results).sort_values("acceleration", ascending=False).reset_index(drop=True)
 
 
-# ---------------------------------------------------------------------------
-# HHI (Herfindahl-Hirschman Index)
-# ---------------------------------------------------------------------------
-
-def compute_hhi(db) -> pd.DataFrame:
-    """HHI per state per year from MongoDB."""
+# herfindahl-hirschman index per state per year from MongoDB
+def compute_hhi(db):
     pipeline = [
         {"$match": {"wireless_subscribers": {"$exists": True}}},
         {"$group": {
@@ -210,12 +166,8 @@ def compute_hhi(db) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-# ---------------------------------------------------------------------------
-# Provider market shares
-# ---------------------------------------------------------------------------
-
-def get_provider_shares(db) -> pd.DataFrame:
-    """National provider market share by year."""
+# national provider market share by year
+def get_provider_shares(db):
     pipeline = [
         {"$match": {"wireless_subscribers": {"$exists": True}}},
         {"$group": {
@@ -231,15 +183,12 @@ def get_provider_shares(db) -> pd.DataFrame:
         "total": d["total"],
     } for d in docs])
 
-    # Pivot: years as index, providers as columns
     pivot = df.pivot_table(index="year", columns="provider",
                            values="total", fill_value=0)
 
-    # Compute shares
     row_totals = pivot.sum(axis=1)
     shares = pivot.div(row_totals, axis=0) * 100
 
-    # Keep top providers, group rest as "Others"
     avg_share = shares.mean()
     top_providers = avg_share.nlargest(6).index.tolist()
     others = shares.drop(columns=top_providers).sum(axis=1)
@@ -249,12 +198,8 @@ def get_provider_shares(db) -> pd.DataFrame:
     return result
 
 
-# ---------------------------------------------------------------------------
-# Visualizations
-# ---------------------------------------------------------------------------
-
-def plot_national_wireless(ts: pd.DataFrame, break_dates: list) -> None:
-    """Line chart of national wireless subscribers with structural breaks."""
+# line chart of national wireless subscribers with structural breaks
+def plot_national_wireless(ts, break_dates):
     fig, ax = plt.subplots(figsize=(12, 6))
     ax.plot(ts["date"], ts["total_wireless"] / 1e6, linewidth=2, color="#1f77b4")
 
@@ -279,8 +224,8 @@ def plot_national_wireless(ts: pd.DataFrame, break_dates: list) -> None:
     print(f"  Saved obj1_national_wireless.png")
 
 
-def plot_state_growth_ranking(df: pd.DataFrame) -> None:
-    """Horizontal bar chart of pre/post CAGR by state."""
+# horizontal bar chart of pre/post CAGR by state
+def plot_state_growth_ranking(df):
     top = df.head(15)
     fig, ax = plt.subplots(figsize=(10, 8))
     y_pos = np.arange(len(top))
@@ -300,8 +245,8 @@ def plot_state_growth_ranking(df: pd.DataFrame) -> None:
     print(f"  Saved obj1_state_growth_ranking.png")
 
 
-def plot_hhi_over_time(hhi_df: pd.DataFrame, break_year: int) -> None:
-    """National average HHI over years with competition thresholds."""
+# national average HHI over years with competition thresholds
+def plot_hhi_over_time(hhi_df, break_year):
     national_hhi = hhi_df.groupby("year")["hhi"].mean().reset_index()
 
     fig, ax = plt.subplots(figsize=(10, 6))
@@ -322,8 +267,8 @@ def plot_hhi_over_time(hhi_df: pd.DataFrame, break_year: int) -> None:
     print(f"  Saved obj1_hhi_over_time.png")
 
 
-def plot_provider_market_share(shares: pd.DataFrame) -> None:
-    """Stacked area chart of provider market shares."""
+# stacked area chart of provider market shares
+def plot_provider_market_share(shares):
     fig, ax = plt.subplots(figsize=(12, 6))
     colors = sns.color_palette("tab10", n_colors=len(shares.columns))
     ax.stackplot(shares.index, *[shares[col] for col in shares.columns],
@@ -342,10 +287,6 @@ def plot_provider_market_share(shares: pd.DataFrame) -> None:
     print(f"  Saved obj1_provider_market_share.png")
 
 
-# ---------------------------------------------------------------------------
-# Main
-# ---------------------------------------------------------------------------
-
 def main():
     FIGURES.mkdir(parents=True, exist_ok=True)
     sns.set_style("whitegrid")
@@ -353,12 +294,10 @@ def main():
     client = MongoClient(MONGO_URI)
     db = client[DB_NAME]
 
-    # 1. National wireless time series
     print("1. Aggregating national wireless subscriber time series...")
     ts = get_national_wireless_ts(db)
     print(f"   {len(ts)} monthly observations ({ts['date'].min().date()} to {ts['date'].max().date()})")
 
-    # 2. Structural break detection (2 breaks: mobile explosion + Jio entry)
     print("\n2. Detecting structural breaks (Bai-Perron / Binseg, n=2)...")
     series = ts["total_wireless"].values
     break_indices = detect_structural_breaks(series, n_bkps=2)
@@ -366,22 +305,18 @@ def main():
     for i, (idx, dt) in enumerate(zip(break_indices, break_dates)):
         print(f"   Break {i+1}: index {idx} → {dt.strftime('%B %Y')}")
 
-    # Use the second break as the Jio-era break for downstream analysis
-    # (first break is the initial mobile explosion ~2011)
     jio_break_idx = break_indices[-1]
     break_date = break_dates[-1]
     break_year = break_date.year
     break_month = break_date.month
     print(f"   Using Break 2 ({break_date.strftime('%B %Y')}) as the Jio-era break")
 
-    # 3. Chow test at both breakpoints
     print("\n3. Chow test at detected breakpoints...")
     for i, (idx, dt) in enumerate(zip(break_indices, break_dates)):
         f_stat, p_val = chow_test(series, idx)
         sig = "***" if p_val < 0.01 else "n.s."
         print(f"   Break {i+1} ({dt.strftime('%b %Y')}): F={f_stat:.2f}, p={p_val:.2e} {sig}")
 
-    # 4. CAGR across three periods
     print("\n4. Computing CAGR across periods...")
     first_break = break_dates[0]
     period1 = ts[ts["date"] < first_break]
@@ -397,14 +332,12 @@ def main():
         cagr = compute_cagr(p["total_wireless"].iloc[0], p["total_wireless"].iloc[-1], years)
         print(f"   {label}: {cagr * 100:.2f}%")
 
-    # 5. State-level growth
     print("\n5. Computing state-level growth rates...")
     state_growth = get_state_growth_rates(db, break_year, break_month)
     print(f"   Top 5 states by CAGR acceleration:")
     for _, row in state_growth.head(5).iterrows():
         print(f"     {row['state']:30s}  pre={row['pre_cagr']*100:+.1f}%  post={row['post_cagr']*100:+.1f}%")
 
-    # 6. HHI
     print("\n6. Computing HHI market concentration...")
     hhi_df = compute_hhi(db)
     national_hhi = hhi_df.groupby("year")["hhi"].mean()
@@ -415,12 +348,10 @@ def main():
         print(f"   Pre-Jio avg HHI:  {pre_hhi:.0f}")
         print(f"   Post-Jio avg HHI: {post_hhi:.0f}")
 
-    # 7. Provider shares
     print("\n7. Computing provider market shares...")
     shares = get_provider_shares(db)
     print(f"   Providers tracked: {list(shares.columns)}")
 
-    # 8. Generate plots
     print("\n8. Generating visualizations...")
     plot_national_wireless(ts, break_dates)
     plot_state_growth_ranking(state_growth)

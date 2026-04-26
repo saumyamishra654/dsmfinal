@@ -25,6 +25,10 @@ from src.analysis.obj1_wireless_growth import (
     chow_test,
     compute_cagr,
 )
+from src.analysis.obj2_teledensity_ger import (
+    get_yearly_correlation,
+    get_regression_results,
+)
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -210,6 +214,16 @@ def load_corroboration_data() -> dict:
     }
 
 
+@st.cache_data(ttl=3600)
+def load_obj2_correlation() -> pd.DataFrame:
+    return get_yearly_correlation()
+
+
+@st.cache_data(ttl=3600)
+def load_obj2_regression() -> list[dict]:
+    return get_regression_results()
+
+
 # ---------------------------------------------------------------------------
 # Page content
 # ---------------------------------------------------------------------------
@@ -228,7 +242,7 @@ with col_left:
     st.markdown("**Chow Test Results**")
     st.dataframe(
         pd.DataFrame(break_results["chow_rows"]),
-        use_container_width=True,
+        width="stretch",
         hide_index=True,
     )
 
@@ -236,7 +250,7 @@ with col_right:
     st.markdown("**CAGR by Period**")
     st.dataframe(
         pd.DataFrame(break_results["cagr_rows"]),
-        use_container_width=True,
+        width="stretch",
         hide_index=True,
     )
 
@@ -246,7 +260,7 @@ st.subheader("Granger Causality: Wireless Growth \u2192 Digital Transaction Grow
 
 granger_df = compute_granger_results()
 
-st.dataframe(granger_df, use_container_width=True, hide_index=True)
+st.dataframe(granger_df, width="stretch", hide_index=True)
 
 if (granger_df["Significant"] == "No").all():
     st.warning(
@@ -290,21 +304,13 @@ fig.add_trace(go.Scatter(
     line=dict(color=GREEN),
 ))
 
-# Vertical annotation lines
-fig.add_vline(
-    x=2010,
-    line_dash="dash",
-    line_color="gray",
-    annotation_text="Digital acceleration",
-    annotation_position="top left",
-)
-fig.add_vline(
-    x=2016,
-    line_dash="dash",
-    line_color=RED,
-    annotation_text="Jio entry",
-    annotation_position="top right",
-)
+# Vertical annotation lines (annotation_text omitted — causes Plotly bug on integer axes)
+fig.add_vline(x=2010, line_dash="dash", line_color="gray")
+fig.add_annotation(x=2010, y=1, yref="paper", text="Digital acceleration",
+                   showarrow=False, xanchor="left", font=dict(color="gray"))
+fig.add_vline(x=2016, line_dash="dash", line_color=RED)
+fig.add_annotation(x=2016, y=0.9, yref="paper", text="Jio entry",
+                   showarrow=False, xanchor="left", font=dict(color=RED))
 
 fig.update_layout(
     xaxis=dict(title="Year", range=[1990, 2023]),
@@ -313,4 +319,51 @@ fig.update_layout(
     margin=dict(l=20, r=20, t=30, b=20),
 )
 
-st.plotly_chart(fig, use_container_width=True)
+st.plotly_chart(fig, width="stretch")
+
+# ── Section 4: Tele-density vs GER (Objective 2) ──────────────────────────
+
+st.divider()
+st.subheader("Tele-density vs GER — Panel Regression (Objective 2)")
+
+corr_df  = load_obj2_correlation()
+reg_results = load_obj2_regression()
+
+col_left4, col_right4 = st.columns(2)
+
+with col_left4:
+    st.markdown("**Annual Cross-State Correlation: Tele-density vs Total GER**")
+    fig_corr = go.Figure()
+    fig_corr.add_trace(go.Scatter(
+        x=corr_df["year"], y=corr_df["pearson_r"],
+        mode="lines+markers", line=dict(color=BLUE), name="Pearson r",
+    ))
+    fig_corr.add_vline(x=2016, line_dash="dash", line_color=RED)
+    fig_corr.add_annotation(x=2016, y=1, yref="paper", text="Jio (2016)",
+                            showarrow=False, xanchor="left", font=dict(color=RED))
+    fig_corr.update_layout(
+        xaxis_title="Year", yaxis_title="Pearson r",
+        margin=dict(t=30, b=20), height=320,
+    )
+    st.plotly_chart(fig_corr, width="stretch")
+
+with col_right4:
+    st.markdown("**Lagged Panel Regression Coefficients (β on tele_density at t-1)**")
+    label_map = {"ger_total": "Total GER", "ger_female": "Female GER", "ger_scst": "SC/ST GER"}
+    reg_df = pd.DataFrame([{
+        "GER Group":   label_map[r["dep_var"]],
+        "β":           r["coef"],
+        "Std Error":   r["std_err"],
+        "t-stat":      r["t_stat"],
+        "p-value":     r["p_value"],
+        "Significant": "Yes" if r["p_value"] < 0.05 else "No",
+        "R²(within)":  r["r2_within"],
+        "N":           r["n_obs"],
+    } for r in reg_results])
+    st.dataframe(reg_df, width="stretch", hide_index=True)
+    st.caption(
+        "Two-way fixed effects (state + year). Clustered standard errors. "
+        "None of the coefficients reach p < 0.05 — direction is positive for "
+        "Total and Female GER but the panel (18 states × 8 years) is too short "
+        "to detect small effects after absorbing fixed effects."
+    )

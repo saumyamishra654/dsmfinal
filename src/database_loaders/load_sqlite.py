@@ -1,10 +1,3 @@
-"""
-Creates the SQLite schema and loads all 5 tables from cleaned_datasets/*.pkl
-
-Run directly:
-    python src/data/load_sqlite.py
-"""
-
 import sqlite3
 import pandas as pd
 from pathlib import Path
@@ -12,10 +5,6 @@ from pathlib import Path
 ROOT    = Path(__file__).resolve().parents[2]
 CLEANED = ROOT / "cleaned_datasets"
 DB_PATH = ROOT / "db" / "dsm.db"
-
-# ---------------------------------------------------------------------------
-# Schema DDL
-# ---------------------------------------------------------------------------
 
 DDL = """
 PRAGMA foreign_keys = ON;
@@ -74,34 +63,29 @@ CREATE TABLE IF NOT EXISTS electricity_consumption (
     pct_growth      REAL
 );
 
--- Composite indexes for common query patterns
 CREATE INDEX IF NOT EXISTS idx_td_state_date  ON tele_density(state_id, date);
 CREATE INDEX IF NOT EXISTS idx_ww_state_date  ON wired_wireless(state_id, date);
 CREATE INDEX IF NOT EXISTS idx_ger_state_year ON education_ger(state_id, year);
 """
 
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
 
-def _get_or_create_state(cur: sqlite3.Cursor, name: str) -> int:
+# inserts a state name if not present and returns its id
+def _get_or_create_state(cur, name):
     cur.execute("INSERT OR IGNORE INTO states(state_name) VALUES (?)", (name,))
     cur.execute("SELECT state_id FROM states WHERE state_name = ?", (name,))
     return cur.fetchone()[0]
 
 
-def _state_id_map(cur: sqlite3.Cursor, names: pd.Series) -> dict[str, int]:
-    """Ensure all state names exist in the states table; return name→id dict."""
+# ensures all state names exist in the states table and returns name->id dict
+def _state_id_map(cur, names):
     mapping = {}
     for name in names.unique():
         mapping[name] = _get_or_create_state(cur, name)
     return mapping
 
-# ---------------------------------------------------------------------------
-# Loaders
-# ---------------------------------------------------------------------------
 
-def load_tele_density(cur: sqlite3.Cursor) -> int:
+# loads tele_density rows from pickle into SQLite
+def load_tele_density(cur):
     df = pd.read_pickle(CLEANED / "tele_density.pkl")
     sid = _state_id_map(cur, df["state_name"])
     rows = [
@@ -115,7 +99,8 @@ def load_tele_density(cur: sqlite3.Cursor) -> int:
     return len(rows)
 
 
-def load_wired_wireless(cur: sqlite3.Cursor) -> int:
+# loads wired_wireless rows from pickle into SQLite
+def load_wired_wireless(cur):
     df = pd.read_pickle(CLEANED / "wired_wireless.pkl")
     sid = _state_id_map(cur, df["state_name"])
     rows = [
@@ -132,7 +117,8 @@ def load_wired_wireless(cur: sqlite3.Cursor) -> int:
     return len(rows)
 
 
-def load_education_ger(cur: sqlite3.Cursor) -> int:
+# loads education_ger rows from pickle into SQLite
+def load_education_ger(cur):
     df = pd.read_pickle(CLEANED / "education_ger.pkl")
     sid = _state_id_map(cur, df["state_name"])
     rows = [
@@ -147,7 +133,8 @@ def load_education_ger(cur: sqlite3.Cursor) -> int:
     return len(rows)
 
 
-def load_digital_transactions(cur: sqlite3.Cursor) -> int:
+# loads digital_transactions rows from pickle into SQLite
+def load_digital_transactions(cur):
     df = pd.read_pickle(CLEANED / "digital_transactions.pkl")
     rows = [
         (r.year, r.month, str(r.date.date()),
@@ -163,7 +150,8 @@ def load_digital_transactions(cur: sqlite3.Cursor) -> int:
     return len(rows)
 
 
-def load_electricity(cur: sqlite3.Cursor) -> int:
+# loads electricity_consumption rows from pickle into SQLite
+def load_electricity(cur):
     df = pd.read_pickle(CLEANED / "electricity.pkl")
     rows = [
         (r.year, r.sector, r.additional_info, r.energy_gwh,
@@ -178,9 +166,6 @@ def load_electricity(cur: sqlite3.Cursor) -> int:
     )
     return len(rows)
 
-# ---------------------------------------------------------------------------
-# Main
-# ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
     DB_PATH.parent.mkdir(exist_ok=True)
@@ -206,7 +191,6 @@ if __name__ == "__main__":
             n = fn(cur)
             print(f"  {table}: {n} rows inserted")
 
-    # Quick verification
     print("\nRow counts in DB:")
     for table, _ in loaders:
         (count,) = con.execute(f"SELECT COUNT(*) FROM {table}").fetchone()

@@ -1,13 +1,3 @@
-"""
-Objective 3: Digital transactions growth + debit-to-UPI shift (2017-2022)
-
-Data source: SQLite digital_transactions (64 rows, national level)
-             + SQLite wired_wireless (aggregated nationally for Granger)
-
-Run directly:
-    python src/analysis/obj3_digital_txn.py
-"""
-
 import sys
 from pathlib import Path
 
@@ -28,12 +18,8 @@ DB_PATH = ROOT / "db" / "sqlite" / "dsm.db"
 FIGURES = ROOT / "outputs" / "figures"
 
 
-# ---------------------------------------------------------------------------
-# Data loading
-# ---------------------------------------------------------------------------
-
-def get_digital_transactions() -> pd.DataFrame:
-    """Load digital transactions from SQLite."""
+# loads digital transactions from SQLite
+def get_digital_transactions():
     con = sqlite3.connect(DB_PATH)
     df = pd.read_sql("""
         SELECT year, month, date, digital_txn_crores,
@@ -46,11 +32,8 @@ def get_digital_transactions() -> pd.DataFrame:
     return df
 
 
-def get_wireless_for_granger() -> pd.DataFrame:
-    """National wireless subscribers from SQLite wired_wireless (2017-2023).
-
-    Better date overlap with digital_transactions (2017-2022) than MongoDB.
-    """
+# national wireless subscribers from SQLite wired_wireless (2017-2023)
+def get_wireless_for_granger():
     con = sqlite3.connect(DB_PATH)
     df = pd.read_sql("""
         SELECT year, month, date,
@@ -64,12 +47,8 @@ def get_wireless_for_granger() -> pd.DataFrame:
     return df
 
 
-# ---------------------------------------------------------------------------
-# Payment share analysis
-# ---------------------------------------------------------------------------
-
-def compute_payment_shares(df: pd.DataFrame) -> pd.DataFrame:
-    """Compute UPI/BHIM, debit card, and other payment shares."""
+# computes UPI/BHIM, debit card, and other payment shares
+def compute_payment_shares(df):
     df = df.copy()
     df["upi_share"] = df["bhim_txn_crores"] / df["digital_txn_crores"]
     df["debit_share"] = df["debit_card_crores"] / df["digital_txn_crores"]
@@ -77,49 +56,32 @@ def compute_payment_shares(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-# ---------------------------------------------------------------------------
-# STL decomposition
-# ---------------------------------------------------------------------------
-
-def run_stl(df: pd.DataFrame):
-    """Run STL decomposition on the digital transaction time series."""
+# runs STL decomposition on the digital transaction time series
+def run_stl(df):
     ts = df.set_index("date")["digital_txn_crores"].copy()
     ts = ts.asfreq("MS")
-    # Fill any gaps with interpolation (shouldn't be needed but safe)
     ts = ts.interpolate()
     stl = STL(ts, period=12, seasonal=13, robust=True)
     return stl.fit()
 
 
-# ---------------------------------------------------------------------------
-# Granger causality
-# ---------------------------------------------------------------------------
-
-def granger_causality(wireless_df: pd.DataFrame, txn_df: pd.DataFrame,
-                      max_lag: int = 4) -> dict:
-    """Test if wireless subscriber growth Granger-causes digital txn growth.
-
-    Returns dict of lag -> (F_stat, p_value) for the ssr_ftest.
-    """
-    # Merge on year+month
+# tests if wireless subscriber growth Granger-causes digital txn growth
+def granger_causality(wireless_df, txn_df, max_lag=4):
     merged = pd.merge(
         wireless_df[["year", "month", "national_wireless"]],
         txn_df[["year", "month", "digital_txn_crores"]],
         on=["year", "month"],
     ).sort_values(["year", "month"]).reset_index(drop=True)
 
-    # Growth rates
     merged["wireless_growth"] = merged["national_wireless"].pct_change()
     merged["txn_growth"] = merged["digital_txn_crores"].pct_change()
     merged = merged.dropna(subset=["wireless_growth", "txn_growth"])
 
-    # Check stationarity
     for col in ["wireless_growth", "txn_growth"]:
         adf_stat, adf_p, *_ = adfuller(merged[col].dropna())
         status = "stationary" if adf_p < 0.05 else "NON-STATIONARY"
         print(f"   ADF test on {col}: stat={adf_stat:.3f}, p={adf_p:.4f} ({status})")
 
-    # Granger test: col 0 = effect (txn_growth), col 1 = cause (wireless_growth)
     data = merged[["txn_growth", "wireless_growth"]].values
 
     results = {}
@@ -135,12 +97,8 @@ def granger_causality(wireless_df: pd.DataFrame, txn_df: pd.DataFrame,
     return results
 
 
-# ---------------------------------------------------------------------------
-# Visualizations
-# ---------------------------------------------------------------------------
-
-def plot_stl_decomposition(stl_result, figures_dir: Path) -> None:
-    """4-panel STL decomposition plot with COVID annotation."""
+# 4-panel STL decomposition plot with COVID annotation
+def plot_stl_decomposition(stl_result, figures_dir):
     fig, axes = plt.subplots(4, 1, figsize=(12, 10), sharex=True)
     covid_date = pd.Timestamp("2020-03-01")
 
@@ -168,8 +126,8 @@ def plot_stl_decomposition(stl_result, figures_dir: Path) -> None:
     print(f"  Saved obj3_stl_decomposition.png")
 
 
-def plot_payment_shares(df: pd.DataFrame, figures_dir: Path) -> None:
-    """Stacked area chart of payment method shares."""
+# stacked area chart of payment method shares
+def plot_payment_shares(df, figures_dir):
     fig, ax = plt.subplots(figsize=(12, 6))
     ax.stackplot(
         df["date"],
@@ -195,8 +153,8 @@ def plot_payment_shares(df: pd.DataFrame, figures_dir: Path) -> None:
     print(f"  Saved obj3_payment_shares.png")
 
 
-def plot_granger_results(results: dict, figures_dir: Path) -> None:
-    """Bar chart of Granger causality F-statistics by lag."""
+# bar chart of Granger causality F-statistics by lag
+def plot_granger_results(results, figures_dir):
     if not results:
         print("  Skipping Granger plot (no results)")
         return
@@ -218,7 +176,6 @@ def plot_granger_results(results: dict, figures_dir: Path) -> None:
     ax.set_title("Granger Causality: Wireless Growth → Digital Txn Growth")
     ax.set_xticks(lags)
 
-    # Legend
     from matplotlib.patches import Patch
     ax.legend(handles=[
         Patch(facecolor="#2ca02c", label="Significant (p < 0.05)"),
@@ -231,20 +188,14 @@ def plot_granger_results(results: dict, figures_dir: Path) -> None:
     print(f"  Saved obj3_granger_causality.png")
 
 
-# ---------------------------------------------------------------------------
-# Main
-# ---------------------------------------------------------------------------
-
 def main():
     FIGURES.mkdir(parents=True, exist_ok=True)
     sns.set_style("whitegrid")
 
-    # 1. Load digital transactions
     print("1. Loading digital transactions from SQLite...")
     txn = get_digital_transactions()
     print(f"   {len(txn)} rows ({txn['date'].min().date()} to {txn['date'].max().date()})")
 
-    # 2. Payment shares
     print("\n2. Computing payment shares...")
     txn = compute_payment_shares(txn)
     first_upi = txn.iloc[0]["upi_share"] * 100
@@ -255,7 +206,6 @@ def main():
     last_debit = txn.iloc[-1]["debit_share"] * 100
     print(f"   Debit share: {first_debit:.1f}% (earliest) → {last_debit:.1f}% (latest)")
 
-    # 3. STL decomposition
     print("\n3. Running STL decomposition...")
     stl_result = run_stl(txn)
     trend = stl_result.trend
@@ -263,7 +213,6 @@ def main():
     print(f"   Trend direction: {trend_direction}")
     print(f"   Trend range: {trend.min():.1f} → {trend.max():.1f} crores")
 
-    # 4. Granger causality
     print("\n4. Testing Granger causality (wireless → digital txn)...")
     wireless = get_wireless_for_granger()
     print(f"   Wireless data: {len(wireless)} months ({wireless['date'].min().date()} to {wireless['date'].max().date()})")
@@ -276,13 +225,11 @@ def main():
             sig = "***" if p_val < 0.01 else "**" if p_val < 0.05 else "*" if p_val < 0.1 else ""
             print(f"     Lag {lag}: F={f_stat:.3f}, p={p_val:.4f} {sig}")
 
-    # 5. Visualizations
     print("\n5. Generating visualizations...")
     plot_stl_decomposition(stl_result, FIGURES)
     plot_payment_shares(txn, FIGURES)
     plot_granger_results(gc_results, FIGURES)
 
-    # 6. Report caveat
     print("\n--- REPORT NOTE ---")
     print("Digital transactions data is national-level only — cannot replicate")
     print("this analysis as a state panel. This is a known data limitation.")
