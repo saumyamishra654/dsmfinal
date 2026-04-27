@@ -13,14 +13,12 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
-from pymongo import MongoClient
 from statsmodels.tsa.stattools import grangercausalitytests
 
 ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT))
 
 from src.analysis.obj1_wireless_growth import (
-    get_national_wireless_ts,
     detect_structural_breaks,
     chow_test,
     compute_cagr,
@@ -28,6 +26,11 @@ from src.analysis.obj1_wireless_growth import (
 from src.analysis.obj2_teledensity_ger import (
     get_yearly_correlation,
     get_regression_results,
+)
+from src.dashboard.data_loader import (
+    load_wireless_ts,
+    load_digital_transactions,
+    SQLITE_PATH,
 )
 
 # ---------------------------------------------------------------------------
@@ -38,8 +41,6 @@ ORANGE = "#ff7f0e"
 GREEN = "#2ca02c"
 RED = "#d62728"
 
-SQLITE_PATH = ROOT / "db" / "sqlite" / "dsm.db"
-
 
 # ---------------------------------------------------------------------------
 # Cached data loaders
@@ -47,20 +48,13 @@ SQLITE_PATH = ROOT / "db" / "sqlite" / "dsm.db"
 
 @st.cache_data(ttl=3600)
 def compute_structural_break_results() -> dict:
-    """Run structural break detection, Chow tests, and CAGR computation.
-
-    Returns a dict with keys: chow_rows, cagr_rows, break_dates.
-    """
-    client = MongoClient("mongodb://localhost:27017")
-    db = client["dsm"]
-    ts = get_national_wireless_ts(db)
+    """Run structural break detection, Chow tests, and CAGR computation."""
+    ts = load_wireless_ts()
     series = ts["total_wireless"].values
 
-    # Detect two structural breaks
     break_indices = detect_structural_breaks(series, n_bkps=2)
     break_dates = [ts["date"].iloc[min(idx, len(ts) - 1)] for idx in break_indices]
 
-    # Chow test at each breakpoint
     chow_rows = []
     for i, (idx, dt) in enumerate(zip(break_indices, break_dates)):
         f_stat, p_value = chow_test(series, idx)
@@ -73,7 +67,6 @@ def compute_structural_break_results() -> dict:
             "Significant": "Yes" if p_value < 0.05 else "No",
         })
 
-    # CAGR per period (3 periods defined by the 2 breaks)
     first_break = break_dates[0]
     second_break = break_dates[1]
     periods = [
@@ -99,7 +92,6 @@ def compute_structural_break_results() -> dict:
             "CAGR (%)": round(cagr * 100, 2),
         })
 
-    client.close()
     return {
         "chow_rows": chow_rows,
         "cagr_rows": cagr_rows,
@@ -109,20 +101,10 @@ def compute_structural_break_results() -> dict:
 
 @st.cache_data(ttl=3600)
 def compute_granger_results() -> pd.DataFrame:
-    """Granger causality: wireless growth -> digital transaction growth.
+    """Granger causality: wireless growth -> digital transaction growth."""
+    digital_txn = load_digital_transactions()
+    wireless = load_wireless_ts()
 
-    Returns DataFrame with columns: Lag (months), F-statistic, p-value, Significant.
-    """
-    conn = sqlite3.connect(str(SQLITE_PATH))
-    digital_txn = pd.read_sql_query("SELECT * FROM digital_transactions", conn)
-    conn.close()
-
-    client = MongoClient("mongodb://localhost:27017")
-    db = client["dsm"]
-    wireless = get_national_wireless_ts(db)
-    client.close()
-
-    # Merge on year + month
     merged = pd.merge(
         digital_txn[["year", "month", "digital_txn_crores"]],
         wireless[["year", "month", "total_wireless"]],
@@ -131,12 +113,10 @@ def compute_granger_results() -> pd.DataFrame:
     )
     merged = merged.sort_values(["year", "month"]).reset_index(drop=True)
 
-    # Compute percentage-change growth rates
     merged["wireless_growth"] = merged["total_wireless"].pct_change()
     merged["txn_growth"] = merged["digital_txn_crores"].pct_change()
     merged = merged.dropna(subset=["wireless_growth", "txn_growth"])
 
-    # Granger test: does wireless_growth Granger-cause txn_growth?
     data = merged[["txn_growth", "wireless_growth"]].values
     maxlag = 4
     results = grangercausalitytests(data, maxlag=maxlag, verbose=False)
@@ -157,13 +137,9 @@ def compute_granger_results() -> pd.DataFrame:
 
 @st.cache_data(ttl=3600)
 def load_corroboration_data() -> dict:
-    """Load and normalize electricity, wireless, and digital transaction data.
-
-    Returns dict with keys: elec_df, wireless_df, digital_df (each year + normalized value).
-    """
+    """Load and normalize electricity, wireless, and digital transaction data."""
     conn = sqlite3.connect(str(SQLITE_PATH))
 
-    # Domestic + Commercial electricity by year
     elec = pd.read_sql_query(
         """
         SELECT year, SUM(energy_gwh) AS energy_gwh
@@ -175,7 +151,6 @@ def load_corroboration_data() -> dict:
         conn,
     )
 
-    # Digital transactions — annual mean
     digital = pd.read_sql_query(
         """
         SELECT year, AVG(digital_txn_crores) AS digital_txn_mean
@@ -187,11 +162,7 @@ def load_corroboration_data() -> dict:
     )
     conn.close()
 
-    # Wireless — annual mean from MongoDB
-    client = MongoClient("mongodb://localhost:27017")
-    db = client["dsm"]
-    wireless_ts = get_national_wireless_ts(db)
-    client.close()
+    wireless_ts = load_wireless_ts()
     wireless_annual = (
         wireless_ts.groupby("year")["total_wireless"]
         .mean()
@@ -199,7 +170,6 @@ def load_corroboration_data() -> dict:
         .rename(columns={"total_wireless": "wireless_mean"})
     )
 
-    # Normalize helper
     def normalize(s: pd.Series) -> pd.Series:
         return (s - s.min()) / (s.max() - s.min())
 

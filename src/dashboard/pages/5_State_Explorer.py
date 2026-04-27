@@ -141,7 +141,7 @@ def _chart_ger(states, gender, category):
 
 st.header("State Explorer")
 st.markdown(
-    "Use this page to expore any individual state's telecom and education trajectory. "
+    "Use this page to explore any individual state's telecom and education trajectory. "
     "Select one state to explore its trends, or toggle **Compare two states** to place them "
     "side by side — useful for illustrating the gap between a leader state (e.g. Kerala) "
     "and a laggard (e.g. Bihar or Rajasthan) identified in the Digital Divide analysis."

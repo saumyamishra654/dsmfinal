@@ -6,20 +6,17 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
-from pymongo import MongoClient
 from statsmodels.tsa.stattools import grangercausalitytests
 
 ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT))
 
-from src.analysis.obj1_wireless_growth import get_national_wireless_ts
+from src.dashboard.data_loader import load_wireless_ts, load_digital_transactions, SQLITE_PATH
 
 BLUE   = "#1f77b4"
 ORANGE = "#ff7f0e"
 GREEN  = "#2ca02c"
 RED    = "#d62728"
-
-SQLITE_PATH = ROOT / "db" / "sqlite" / "dsm.db"
 
 # ---------------------------------------------------------------------------
 # Cached loaders
@@ -28,14 +25,8 @@ SQLITE_PATH = ROOT / "db" / "sqlite" / "dsm.db"
 # runs Granger causality test on wireless and digital transaction growth
 @st.cache_data(ttl=3600)
 def compute_granger_results():
-    conn = sqlite3.connect(str(SQLITE_PATH))
-    digital_txn = pd.read_sql_query("SELECT * FROM digital_transactions", conn)
-    conn.close()
-
-    client = MongoClient("mongodb://localhost:27017")
-    db     = client["dsm"]
-    wireless = get_national_wireless_ts(db)
-    client.close()
+    digital_txn = load_digital_transactions()
+    wireless = load_wireless_ts()
 
     merged = pd.merge(
         digital_txn[["year", "month", "digital_txn_crores"]],
@@ -88,11 +79,7 @@ def load_corroboration_data():
     )
     conn.close()
 
-    client = MongoClient("mongodb://localhost:27017")
-    db     = client["dsm"]
-    wireless_ts = get_national_wireless_ts(db)
-    client.close()
-
+    wireless_ts = load_wireless_ts()
     wireless_annual = (
         wireless_ts.groupby("year")["total_wireless"]
         .mean().reset_index()

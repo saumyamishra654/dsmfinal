@@ -1,5 +1,4 @@
 import sys
-import sqlite3
 from pathlib import Path
 
 import numpy as np
@@ -7,18 +6,20 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
-from pymongo import MongoClient
 
 ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT))
 
 from src.analysis.obj1_wireless_growth import (
-    get_national_wireless_ts,
     detect_structural_breaks,
     chow_test,
     compute_cagr,
-    compute_hhi,
-    get_provider_shares,
+)
+from src.dashboard.data_loader import (
+    load_wireless_ts,
+    load_hhi,
+    load_provider_shares,
+    load_digital_transactions,
 )
 
 BLUE   = "#1f77b4"
@@ -26,29 +27,15 @@ ORANGE = "#ff7f0e"
 GREEN  = "#2ca02c"
 RED    = "#d62728"
 
-SQLITE_PATH = ROOT / "db" / "sqlite" / "dsm.db"
-
 # ---------------------------------------------------------------------------
-# Cached loaders
+# Cached loaders (analysis computations only — data comes from data_loader)
 # ---------------------------------------------------------------------------
 
-# loads national wireless subscriber time series from MongoDB
-@st.cache_data(ttl=3600)
-def load_wireless_ts():
-    client = MongoClient("mongodb://localhost:27017")
-    db     = client["dsm"]
-    ts     = get_national_wireless_ts(db)
-    client.close()
-    return ts
-
-
-# detects structural breaks in the wireless series
 @st.cache_data(ttl=3600)
 def load_structural_breaks(series_values, n_bkps=2):
     return detect_structural_breaks(np.array(series_values), n_bkps=n_bkps)
 
 
-# runs structural break detection, Chow tests, and CAGR computation
 @st.cache_data(ttl=3600)
 def compute_structural_break_results(series_values, dates_iso):
     series      = np.array(series_values)
@@ -94,36 +81,6 @@ def compute_structural_break_results(series_values, dates_iso):
         "cagr_rows":   cagr_rows,
         "break_dates": [d.isoformat() for d in break_dates],
     }
-
-
-# loads HHI per state per year from MongoDB
-@st.cache_data(ttl=3600)
-def load_hhi():
-    client = MongoClient("mongodb://localhost:27017")
-    db     = client["dsm"]
-    hhi    = compute_hhi(db)
-    client.close()
-    return hhi
-
-
-# loads national provider market shares from MongoDB
-@st.cache_data(ttl=3600)
-def load_provider_shares():
-    client = MongoClient("mongodb://localhost:27017")
-    db     = client["dsm"]
-    shares = get_provider_shares(db)
-    client.close()
-    return shares
-
-
-# loads monthly digital transactions from SQLite
-@st.cache_data(ttl=3600)
-def load_digital_transactions():
-    conn = sqlite3.connect(str(SQLITE_PATH))
-    df   = pd.read_sql_query("SELECT * FROM digital_transactions", conn)
-    conn.close()
-    df["date"] = pd.to_datetime(df["date"])
-    return df
 
 
 st.header("India's Connectivity Revolution")
