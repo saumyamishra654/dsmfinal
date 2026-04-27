@@ -1,15 +1,11 @@
-anthropic==0.97.0
-langchain-anthropic==0.3.15
-langchain-core==0.3.55
 linearmodels==7.0
 matplotlib==3.10.9
 networkx==3.4.2
 numpy==2.4.4
 pandas==3.0.2
 plotly==6.7.0
-pymongo==4.17.0
 python-louvain==0.16
-ruptures==1.1.10
+ruptures==1.1.9
 scikit-learn==1.6.1
 scipy==1.17.1
 seaborn==0.13.2
