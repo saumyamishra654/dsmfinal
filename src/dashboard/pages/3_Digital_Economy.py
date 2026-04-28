@@ -50,7 +50,7 @@ def compute_granger_results():
             "Lag (months)": lag,
             "F-statistic":  round(f_stat, 4),
             "p-value":      round(p_value, 4),
-            "Significant":  "Yes ✓" if p_value < 0.05 else "No",
+            "Significant":  "Yes" if p_value < 0.05 else "No",
         })
     return pd.DataFrame(rows)
 
@@ -201,9 +201,9 @@ st.markdown(
 granger_df = compute_granger_results()
 st.dataframe(granger_df, width="stretch", hide_index=True)
 
-any_significant = (granger_df["Significant"] == "Yes ✓").any()
+any_significant = (granger_df["Significant"] == "Yes").any()
 if any_significant:
-    sig_lags = granger_df[granger_df["Significant"] == "Yes ✓"]["Lag (months)"].tolist()
+    sig_lags = granger_df[granger_df["Significant"] == "Yes"]["Lag (months)"].tolist()
     st.markdown(
         f"> **Finding:** Wireless growth *does* Granger-cause digital transaction growth at "
         f"lag(s) {sig_lags} month(s) (p < 0.05). This means that a rise in wireless subscribers "

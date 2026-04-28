@@ -124,7 +124,7 @@ reg_df = pd.DataFrame([{
     "Std Error":    r["std_err"],
     "t-stat":       r["t_stat"],
     "p-value":      r["p_value"],
-    "Significant":  "Yes ✓" if r["p_value"] < 0.05 else "No",
+    "Significant":  "Yes" if r["p_value"] < 0.05 else "No",
     "R² (within)":  r["r2_within"],
     "N obs":        r["n_obs"],
 } for r in reg_results])

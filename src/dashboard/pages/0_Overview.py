@@ -70,7 +70,7 @@ c3.metric(
 )
 c4.metric(
     label="Education & Digital Enablement positively correlated",
-    value="📈",
+    value="Yes",
     delta="states with high telecom density tend to have high GERs",
 )
 

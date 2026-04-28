@@ -51,7 +51,7 @@ def compute_structural_break_results(series_values, dates_iso):
             "Date":        dt.strftime("%b %Y"),
             "F-statistic": round(f_stat, 2),
             "p-value":     f"{p_value:.2e}",
-            "Significant": "Yes ✓" if p_value < 0.05 else "No",
+            "Significant": "Yes" if p_value < 0.05 else "No",
         })
 
     first_break  = break_dates[0]
