@@ -2,3 +2,4 @@ datasets/
 .venv
 docs/
 report.md
+__pycache__/

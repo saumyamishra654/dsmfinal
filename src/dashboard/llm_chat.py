@@ -104,7 +104,7 @@ def _ask_llm(question, api_key):
     return response.content
 
 
-# renders the LLM chat interface (sidebar + main area components)
+# renders the LLM chat interface (sidebar controls + bottom drawer)
 def render_sidebar_chat():
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = []
@@ -148,21 +148,29 @@ def render_sidebar_chat():
             }
         )
 
-    for entry in st.session_state.chat_history:
-        st.markdown(f"**Q:** {entry['question']}")
+    if not st.session_state.chat_history:
+        return
 
-        if entry["error"]:
-            st.error(entry["error"])
-        else:
-            result = entry["result"]
-            if isinstance(result, pd.DataFrame):
-                st.dataframe(result)
-            elif hasattr(result, "to_plotly_json"):
-                st.plotly_chart(result, width="stretch")
-            else:
-                st.write(result)
+    n = len(st.session_state.chat_history)
+    label = f"Chat Results ({n} {'query' if n == 1 else 'queries'})"
+    with st.expander(label, expanded=True):
+        drawer = st.container(height=420)
+        with drawer:
+            for entry in st.session_state.chat_history:
+                st.markdown(f"**Q:** {entry['question']}")
 
-        with st.expander("Show generated code"):
-            st.code(entry["code"], language="python")
+                if entry["error"]:
+                    st.error(entry["error"])
+                else:
+                    res = entry["result"]
+                    if isinstance(res, pd.DataFrame):
+                        st.dataframe(res)
+                    elif hasattr(res, "to_plotly_json"):
+                        st.plotly_chart(res, use_container_width=True)
+                    else:
+                        st.write(res)
 
-        st.divider()
+                with st.expander("Show generated code"):
+                    st.code(entry["code"], language="python")
+
+                st.divider()
