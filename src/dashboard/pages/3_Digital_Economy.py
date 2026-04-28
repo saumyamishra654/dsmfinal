@@ -197,6 +197,23 @@ st.markdown(
     "our forecast of *digital transaction growth rate*, beyond what past transaction data alone tells us? "
     "We test this at four different lags (1 through 4 months)."
 )
+with st.expander("What is Granger causality?"):
+    st.markdown(
+        "**Granger causality** is a statistical test for whether one time series is useful in "
+        "forecasting another. It does NOT prove true causation -- it tests *predictive precedence*.\n\n"
+        "The test works by comparing two models:\n\n"
+        "1. **Restricted model**: predict `txn_growth(t)` using only its own past values "
+        "(lags of `txn_growth`)\n"
+        "2. **Unrestricted model**: predict `txn_growth(t)` using its own past values PLUS "
+        "past values of `wireless_growth`\n\n"
+        "If adding `wireless_growth` lags significantly improves the forecast (measured by an "
+        "F-test comparing residual sums of squares), we say wireless growth *Granger-causes* "
+        "digital transaction growth.\n\n"
+        "We test at lags 1 through 4 months. Both series are converted to **percentage-change "
+        "growth rates** first (to ensure stationarity, which is required for the test to be valid). "
+        "A p-value < 0.05 at any lag means wireless growth has significant predictive power "
+        "for transaction growth at that time horizon."
+    )
 
 granger_df = compute_granger_results()
 st.dataframe(granger_df, width="stretch", hide_index=True)

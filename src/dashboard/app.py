@@ -23,6 +23,7 @@ pages = [
     st.Page("pages/3_Digital_Economy.py",        title="Digital Payments"),
     st.Page("pages/4_Digital_Divide.py",         title="The Digital Divide"),
     st.Page("pages/5_State_Explorer.py",         title="State Explorer"),
+    st.Page("pages/6_Dataset_Explorer.py",      title="Dataset Explorer"),
 ]
 nav = st.navigation(pages)
 

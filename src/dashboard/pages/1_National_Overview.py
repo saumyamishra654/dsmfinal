@@ -111,6 +111,17 @@ st.markdown(
     "The national wireless subscriber count is the headline measure of India's telecom reach. "
     "Two structural breaks divide the series into three regimes with markedly different growth dynamics."
 )
+with st.expander("What is structural break detection (Bai-Perron)?"):
+    st.markdown(
+        "**Bai-Perron structural break detection** identifies points in a time series where the "
+        "statistical properties (mean, trend, variance) change significantly. The algorithm searches "
+        "over all possible break locations to find the partition that minimizes the total sum of "
+        "squared residuals across segments.\n\n"
+        "We use the **Binary Segmentation (BinSeg)** variant with an L2 cost model, which "
+        "recursively splits the series at the point that yields the largest reduction in squared "
+        "error. We specify `n_bkps=2` to detect two breakpoints, dividing the series into three "
+        "regimes. The detected break dates are then validated with a Chow test (see below)."
+    )
 
 fig_wireless = px.line(
     ts,
@@ -153,6 +164,21 @@ st.markdown(
     "A significant F-statistic confirms the break is real rather than random noise. "
     "CAGR (Compound Annual Growth Rate) quantifies how fast subscribers grew in each regime."
 )
+with st.expander("What is the Chow test?"):
+    st.markdown(
+        "The **Chow test** validates whether a structural break is statistically real. It works by "
+        "fitting three linear regressions:\n\n"
+        "1. **Pooled model**: a single regression across the entire series\n"
+        "2. **Pre-break model**: regression on data before the break\n"
+        "3. **Post-break model**: regression on data after the break\n\n"
+        "If the two sub-models fit significantly better than the pooled model, the break is real. "
+        "The test statistic is:\n\n"
+        "$$F = \\frac{(RSS_{pooled} - RSS_1 - RSS_2) / k}{(RSS_1 + RSS_2) / (n - 2k)}$$\n\n"
+        "where RSS = residual sum of squares, k = number of parameters (2 for a linear model), "
+        "and n = total observations. A large F-statistic (small p-value) confirms the break.\n\n"
+        "**CAGR** (Compound Annual Growth Rate) is computed as "
+        "$(V_{end}/V_{start})^{1/years} - 1$, giving the annualized growth rate for each regime."
+    )
 
 break_results = compute_structural_break_results(
     ts["total_wireless"].tolist(),
@@ -249,6 +275,21 @@ st.markdown(
     "The Herfindahl-Hirschman Index (HHI) measures concentration: "
     "HHI > 2,500 is highly concentrated; HHI < 1,500 is competitive."
 )
+with st.expander("What is the Herfindahl-Hirschman Index (HHI)?"):
+    st.markdown(
+        "The **HHI** is the standard measure of market concentration used by competition "
+        "authorities worldwide. It is computed by summing the squared market shares of all "
+        "firms in the market:\n\n"
+        "$$HHI = \\sum_{i=1}^{N} s_i^2 \\times 10{,}000$$\n\n"
+        "where $s_i$ is firm $i$'s market share as a fraction (0 to 1). The scale runs from "
+        "near 0 (perfect competition) to 10,000 (monopoly). The US Department of Justice "
+        "uses these thresholds:\n\n"
+        "- **HHI < 1,500**: Competitive market\n"
+        "- **1,500 -- 2,500**: Moderately concentrated\n"
+        "- **HHI > 2,500**: Highly concentrated\n\n"
+        "We compute HHI per state per year from provider-level wireless subscriber counts, "
+        "then average across states to get the national trend."
+    )
 
 col_share, col_hhi = st.columns(2)
 

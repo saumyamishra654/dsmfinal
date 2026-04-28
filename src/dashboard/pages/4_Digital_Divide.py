@@ -118,9 +118,30 @@ st.markdown(
     "Each **node** is an Indian state. Each **edge** represents cosine similarity between two "
     "states' feature vectors (mean tele-density, tele-density growth slope, mean GER, GER growth "
     "slope). Only edges above the median similarity are shown to reduce clutter. "
-    "**Node colour** indicates Louvain community membership — states of the same colour are "
+    "**Node colour** indicates Louvain community membership -- states of the same colour are "
     "structurally similar in their connectivity and education profiles."
 )
+with st.expander("What is Louvain community detection?"):
+    st.markdown(
+        "**Louvain community detection** is a graph-based clustering algorithm that identifies "
+        "groups of densely connected nodes. Unlike K-means (which needs a pre-specified k), "
+        "Louvain automatically discovers the number of communities by maximizing **modularity** "
+        "-- a measure of how much more densely connected nodes within a community are compared "
+        "to what would be expected by chance.\n\n"
+        "**How we build the graph:**\n\n"
+        "1. For each state, compute a 4-feature vector: mean tele-density, tele-density growth "
+        "slope (OLS over years), mean GER, and GER growth slope. All features are standardized "
+        "(zero mean, unit variance).\n"
+        "2. Compute **cosine similarity** between every pair of states. Cosine similarity measures "
+        "the angle between two vectors: 1.0 = identical direction, 0.0 = orthogonal.\n"
+        "3. Build a weighted graph where each state is a node and edge weights are the cosine "
+        "similarities.\n"
+        "4. Run the Louvain algorithm, which iteratively merges nodes into communities to maximize "
+        "modularity.\n\n"
+        "The result: states with similar connectivity *and* education profiles end up in the same "
+        "community, revealing the digital divide structure without us having to pre-specify which "
+        "states are 'leaders' or 'laggards'."
+    )
 
 fig_network = build_louvain_plotly(features)
 st.plotly_chart(fig_network, width="stretch")
@@ -189,6 +210,18 @@ st.divider()
 # ---------------------------------------------------------------------------
 
 st.subheader("3. Gap Analysis: How Far Behind Are the Laggard States?")
+with st.expander("How is the gap analysis computed?"):
+    st.markdown(
+        "For each state in the laggard community, we compute:\n\n"
+        "1. **Annual growth rate**: OLS slope of tele-density regressed on year index (2013-2021). "
+        "This gives the average annual increase in tele-density units per year.\n"
+        "2. **Gap to leader**: leader community mean tele-density minus the state's mean.\n"
+        "3. **Years to close**: gap / annual growth rate.\n\n"
+        "This is a **linear forward projection** -- it assumes the state continues growing at its "
+        "current rate and the leader stays still. In reality, leaders also grow, so the true "
+        "convergence time is even longer. States with negative or near-zero growth rates are "
+        "effectively diverging."
+    )
 st.markdown(
     "For each state in the lowest tele-density community, we compute: "
     "**(leader mean tele-density − state mean) ÷ state annual tele-density growth rate**. "

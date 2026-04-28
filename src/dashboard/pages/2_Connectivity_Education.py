@@ -65,6 +65,16 @@ st.markdown(
     "tele-density tend to have higher education enrolment — but this is a **levels relationship**, "
     "partly driven by between-state wealth differences rather than connectivity alone."
 )
+with st.expander("Why scatter first, then regression?"):
+    st.markdown(
+        "The scatter plot shows the **unconditional** (raw) relationship between tele-density and "
+        "GER across all state-year observations. The positive slope is encouraging but potentially "
+        "misleading: richer states tend to have both more phones *and* higher enrolment, so the "
+        "correlation may be driven by a confounding variable (state income). The panel regression "
+        "below controls for this by including **state fixed effects** (which absorb all "
+        "time-invariant state-level differences, including wealth) and **year fixed effects** "
+        "(which absorb nationwide trends affecting all states equally)."
+    )
 
 valid = panel.dropna(subset=["tele_density", "ger_total"])
 m, b  = np.polyfit(valid["tele_density"], valid["ger_total"], 1)
@@ -112,8 +122,24 @@ st.divider()
 
 st.subheader("2. Lagged Panel Regression — Does Tele-density Predict GER?")
 st.markdown(
-    "To test causal direction, we use **tele-density at year t−1** to predict GER at year t."
+    "To test causal direction, we use **tele-density at year t-1** to predict GER at year t."
 )
+with st.expander("What is a two-way fixed-effects panel regression?"):
+    st.markdown(
+        "A **panel regression** uses data that varies across both entities (states) and time (years). "
+        "The **two-way fixed-effects** model includes:\n\n"
+        "- **State fixed effects**: a dummy for each state, absorbing all "
+        "time-invariant differences (geography, base wealth, culture). This means we only use "
+        "*within-state variation over time* to estimate the effect.\n"
+        "- **Year fixed effects**: a dummy for each year, absorbing nationwide "
+        "shocks (policy changes, economic cycles) that hit all states equally.\n\n"
+        "The model is: `GER(i,t) = B * TeleDensity(i,t-1) + state_FE + year_FE + error`\n\n"
+        "We use a **one-year lag** (t-1) on tele-density so the predictor precedes the outcome "
+        "in time, strengthening the causal interpretation. Standard errors are **clustered by state** "
+        "to account for serial correlation within each state's time series.\n\n"
+        "The coefficient B tells us: for a one-unit increase in tele-density last year, "
+        "how much does GER change this year, *after removing state and year effects*?"
+    )
 
 reg_results = load_regression()
 label_map   = {"ger_total": "Total GER", "ger_female": "Female GER", "ger_scst": "SC/ST GER"}
