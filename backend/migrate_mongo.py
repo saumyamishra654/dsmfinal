@@ -1,28 +1,19 @@
-"""
-Migrate telecom_subscriptions from MongoDB to SQLite.
-
-Source: mongodb://localhost:27017, database "dsm", collection "telecom_subscriptions"
-Target: backend/db/dsm.db, table "telecom_subscriptions"
-"""
+# dumps telecom_subscriptions from mongo into sqlite so we don't need mongo running
 
 import sqlite3
 from pathlib import Path
 
 from pymongo import MongoClient
 
-# Paths
 DB_PATH = Path(__file__).parent / "db" / "dsm.db"
 
-# MongoDB connection
 mongo_client = MongoClient("mongodb://localhost:27017")
 mongo_db = mongo_client["dsm"]
 collection = mongo_db["telecom_subscriptions"]
 
-# SQLite connection
 conn = sqlite3.connect(DB_PATH)
 cursor = conn.cursor()
 
-# Create table
 cursor.execute("DROP TABLE IF EXISTS telecom_subscriptions")
 cursor.execute("""
     CREATE TABLE telecom_subscriptions (
@@ -37,7 +28,6 @@ cursor.execute("""
     )
 """)
 
-# Read from MongoDB and insert into SQLite
 docs = collection.find({}, {
     "_id": 0,
     "state": 1,

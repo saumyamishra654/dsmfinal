@@ -69,14 +69,12 @@ CREATE INDEX IF NOT EXISTS idx_ger_state_year ON education_ger(state_id, year);
 """
 
 
-# inserts a state name if not present and returns its id
 def _get_or_create_state(cur, name):
     cur.execute("INSERT OR IGNORE INTO states(state_name) VALUES (?)", (name,))
     cur.execute("SELECT state_id FROM states WHERE state_name = ?", (name,))
     return cur.fetchone()[0]
 
 
-# ensures all state names exist in the states table and returns name->id dict
 def _state_id_map(cur, names):
     mapping = {}
     for name in names.unique():
@@ -84,7 +82,6 @@ def _state_id_map(cur, names):
     return mapping
 
 
-# loads tele_density rows from pickle into SQLite
 def load_tele_density(cur):
     df = pd.read_pickle(CLEANED / "tele_density.pkl")
     sid = _state_id_map(cur, df["state_name"])
@@ -99,7 +96,6 @@ def load_tele_density(cur):
     return len(rows)
 
 
-# loads wired_wireless rows from pickle into SQLite
 def load_wired_wireless(cur):
     df = pd.read_pickle(CLEANED / "wired_wireless.pkl")
     sid = _state_id_map(cur, df["state_name"])
@@ -117,7 +113,6 @@ def load_wired_wireless(cur):
     return len(rows)
 
 
-# loads education_ger rows from pickle into SQLite
 def load_education_ger(cur):
     df = pd.read_pickle(CLEANED / "education_ger.pkl")
     sid = _state_id_map(cur, df["state_name"])
@@ -133,7 +128,6 @@ def load_education_ger(cur):
     return len(rows)
 
 
-# loads digital_transactions rows from pickle into SQLite
 def load_digital_transactions(cur):
     df = pd.read_pickle(CLEANED / "digital_transactions.pkl")
     rows = [
@@ -150,7 +144,6 @@ def load_digital_transactions(cur):
     return len(rows)
 
 
-# loads electricity_consumption rows from pickle into SQLite
 def load_electricity(cur):
     df = pd.read_pickle(CLEANED / "electricity.pkl")
     rows = [

@@ -1,4 +1,4 @@
-"""Sandboxed code execution for LLM-generated Python code."""
+# sandboxed exec for the chat feature
 
 import signal
 import sqlite3
@@ -33,10 +33,7 @@ DANGEROUS_PATTERNS = [
 
 
 def validate_code(code: str) -> str | None:
-    """Check code for dangerous patterns.
-
-    Returns an error message if dangerous patterns are found, None if the code is safe.
-    """
+    # quick check for sketchy imports/calls
     for pattern in DANGEROUS_PATTERNS:
         if pattern in code:
             return f"Blocked: code contains disallowed pattern '{pattern}'"
@@ -52,24 +49,7 @@ def _timeout_handler(signum, frame):
 
 
 def run_sandboxed(code: str, db_path: str, timeout: int = 10) -> tuple:
-    """Run code in a sandboxed namespace.
-
-    The code is executed via compile() and exec() in a restricted namespace containing
-    {pd, np, sqlite3, px, go, db_path}. Uses signal.alarm for timeout enforcement.
-    The executed code is expected to assign its output to a variable called "result".
-
-    NOTE: The exec() usage here is INTENTIONAL. This is a code execution sandbox
-    for an LLM REPL that runs validated, sanitized code snippets.
-
-    Args:
-        code: Python code string to execute.
-        db_path: Path to the SQLite database file.
-        timeout: Maximum execution time in seconds (default 10).
-
-    Returns:
-        Tuple of (result, error) where result is the value assigned to "result"
-        variable in the code, and error is None on success or an error string.
-    """
+    # exec validated code in a restricted namespace, returns (result, error)
     namespace = {
         "pd": pd,
         "np": np,
@@ -84,7 +64,6 @@ def run_sandboxed(code: str, db_path: str, timeout: int = 10) -> tuple:
 
     try:
         compiled = compile(code, "<llm-code>", "exec")
-        # noqa: S102 - intentional sandboxed exec for LLM REPL
         run_exec(compiled, namespace)
         result = namespace.get("result", None)
         return (result, None)
@@ -98,7 +77,5 @@ def run_sandboxed(code: str, db_path: str, timeout: int = 10) -> tuple:
 
 
 def run_exec(compiled, namespace):
-    """Execute compiled code in namespace. Intentional sandboxed exec for LLM REPL."""
-    # This function wraps the built-in exec for the sandboxed code runner.
-    # The code has been validated by validate_code() before reaching here.
-    exec(compiled, namespace)  # noqa: S102 - intentional sandboxed exec for LLM REPL
+    # wrapping exec so linters don't yell at the main function
+    exec(compiled, namespace)  # noqa: S102

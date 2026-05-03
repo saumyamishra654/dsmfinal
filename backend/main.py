@@ -1,4 +1,4 @@
-"""FastAPI backend for the Digital India dashboard."""
+# fastapi backend for the dashboard
 
 import sqlite3
 from pathlib import Path
@@ -12,7 +12,6 @@ from chat import handle_chat
 
 app = FastAPI(title="Digital India API", version="1.0.0")
 
-# CORS middleware - allow all origins
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -25,14 +24,12 @@ DB_PATH = Path(__file__).parent / "db" / "dsm.db"
 
 
 def get_con() -> sqlite3.Connection:
-    """Get a read-only SQLite connection."""
     uri = f"file:{DB_PATH}?mode=ro"
     con = sqlite3.connect(uri, uri=True)
     con.row_factory = sqlite3.Row
     return con
 
 
-# --- Request/Response models ---
 
 
 class ChatRequest(BaseModel):
@@ -41,18 +38,13 @@ class ChatRequest(BaseModel):
     history: Optional[list[dict]] = None
 
 
-# --- Endpoints ---
-
-
 @app.get("/api/health")
 def health():
-    """Health check endpoint."""
     return {"status": "ok"}
 
 
 @app.get("/api/states")
 def get_states():
-    """Get list of all states."""
     con = get_con()
     try:
         cur = con.execute("SELECT state_id, state_name FROM states ORDER BY state_name")
@@ -64,7 +56,6 @@ def get_states():
 
 @app.get("/api/timeseries/{state}")
 def get_timeseries(state: str):
-    """Get tele_density time series for a given state."""
     con = get_con()
     try:
         cur = con.execute(
@@ -87,7 +78,6 @@ def get_timeseries(state: str):
 
 @app.get("/api/wireless/{state}")
 def get_wireless(state: str):
-    """Get wireless/wireline data for a given state."""
     con = get_con()
     try:
         cur = con.execute(
@@ -110,7 +100,6 @@ def get_wireless(state: str):
 
 @app.get("/api/ger/{state}")
 def get_ger(state: str):
-    """Get education GER data for a given state."""
     con = get_con()
     try:
         cur = con.execute(
@@ -133,7 +122,6 @@ def get_ger(state: str):
 
 @app.get("/api/national/wireless")
 def get_national_wireless():
-    """Get aggregated national wireless data from telecom_subscriptions."""
     con = get_con()
     try:
         cur = con.execute(
@@ -152,7 +140,6 @@ def get_national_wireless():
 
 @app.get("/api/national/transactions")
 def get_national_transactions():
-    """Get digital transactions data."""
     con = get_con()
     try:
         cur = con.execute(
@@ -170,7 +157,6 @@ def get_national_transactions():
 
 @app.get("/api/hhi")
 def get_hhi():
-    """Compute HHI (Herfindahl-Hirschman Index) per state per year from telecom_subscriptions."""
     con = get_con()
     try:
         cur = con.execute(
@@ -220,7 +206,6 @@ def get_hhi():
 
 @app.post("/api/chat")
 def chat_endpoint(request: ChatRequest):
-    """Chat endpoint that processes questions using LLM and returns analysis results."""
     result = handle_chat(
         question=request.question,
         api_key=request.api_key,

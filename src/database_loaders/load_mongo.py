@@ -18,7 +18,6 @@ _MONTH_MAP = {
 }
 
 
-# extracts the 4-digit year from a TRAI year string
 def _parse_year(raw):
     m = re.search(r"(\d{4})", str(raw))
     if not m:
@@ -26,7 +25,6 @@ def _parse_year(raw):
     return int(m.group(1))
 
 
-# extracts the month name from a TRAI month string and maps to int
 def _parse_month(raw):
     m = re.search(r"([A-Za-z]+)", str(raw))
     if not m:
@@ -94,7 +92,6 @@ _NUMERIC_FIELDS = {
 }
 
 
-# converts one CSV row into a MongoDB document, omitting NaN numeric fields
 def _row_to_doc(row):
     provider_raw = row["Service Provider"]
     provider = PROVIDER_MAP.get(provider_raw, provider_raw)
@@ -115,7 +112,6 @@ def _row_to_doc(row):
     return doc
 
 
-# reads the raw CSV, transforms rows into documents, and bulk-inserts into MongoDB
 def load_to_mongo():
     if not CSV_PATH.exists():
         raise FileNotFoundError(

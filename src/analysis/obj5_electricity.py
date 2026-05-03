@@ -58,7 +58,6 @@ def normalize_series(s):
     return (s - smin) / (smax - smin)
 
 
-# Pearson correlation at lags from -max_lag to +max_lag
 def cross_correlation(x, y, max_lag=5):
     results = []
     for lag in range(-max_lag, max_lag + 1):
@@ -81,7 +80,7 @@ def cross_correlation(x, y, max_lag=5):
     return pd.DataFrame(results)
 
 
-# tests if domestic+commercial electricity growth accelerated after break_year
+# welch's t-test on pre vs post growth rates
 def growth_acceleration_test(energy_df, break_year=2010):
     df = energy_df[energy_df["year"] >= 2000].copy()
     df = df.sort_values("year")
@@ -98,7 +97,6 @@ def growth_acceleration_test(energy_df, break_year=2010):
     return pre.mean(), post.mean(), t_stat, p_val
 
 
-# overlaid normalized time series of electricity, wireless, and digital txn
 def plot_normalized_overlay(elec_df, wireless_df, txn_df):
     fig, ax = plt.subplots(figsize=(12, 6))
 
@@ -130,7 +128,6 @@ def plot_normalized_overlay(elec_df, wireless_df, txn_df):
     print(f"  Saved obj5_normalized_overlay.png")
 
 
-# bar chart of cross-correlation at different lags
 def plot_ccf(ccf_df, n_obs):
     fig, ax = plt.subplots(figsize=(8, 5))
 

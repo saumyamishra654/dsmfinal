@@ -1,4 +1,4 @@
-"""LLM chat handler for data analysis queries."""
+# chat handler - sends questions to claude, runs the generated code
 
 import re
 from pathlib import Path
@@ -72,7 +72,6 @@ The database is located at the path stored in `db_path`. You have access to: pd,
 
 
 def _extract_code(text: str) -> str | None:
-    """Extract Python code from markdown code blocks."""
     match = re.search(r"```python\s*\n(.*?)```", text, re.DOTALL)
     if match:
         return match.group(1).strip()
@@ -80,12 +79,6 @@ def _extract_code(text: str) -> str | None:
 
 
 def _serialize_result(result) -> tuple[str, any]:
-    """Serialize the execution result for JSON response.
-
-    Returns:
-        Tuple of (type_str, data) where type_str is one of
-        "dataframe", "plotly", "text", or "error".
-    """
     import pandas as pd
     import plotly.graph_objects as go
 
@@ -102,16 +95,6 @@ def _serialize_result(result) -> tuple[str, any]:
 
 
 def handle_chat(question: str, api_key: str, history: list[dict] | None = None) -> dict:
-    """Handle a chat request by calling the LLM, extracting code, and executing it.
-
-    Args:
-        question: The user's question.
-        api_key: Anthropic API key.
-        history: Optional conversation history as list of {role, content} dicts.
-
-    Returns:
-        Dict with keys: code, result_type, data, error
-    """
     messages = []
 
     if history:

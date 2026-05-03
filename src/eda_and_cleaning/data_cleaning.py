@@ -13,7 +13,6 @@ _MONTH_MAP = {
 }
 
 
-# extracts the 4-digit year from a TRAI year string
 def _parse_year(raw):
     m = re.search(r"(\d{4})", str(raw))
     if not m:
@@ -21,7 +20,6 @@ def _parse_year(raw):
     return int(m.group(1))
 
 
-# extracts the month name from a TRAI month string and maps to int
 def _parse_month(raw):
     m = re.search(r"([A-Za-z]+)", str(raw))
     if not m:
@@ -32,12 +30,11 @@ def _parse_month(raw):
     return _MONTH_MAP[name]
 
 
-# builds the YYYY-MM-01 date string for SQL DATE columns
 def _make_date(year, month):
     return f"{year:04d}-{month:02d}-01"
 
 
-# converts a Financial Year label to calendar year (Apr-Dec belong to fy_year - 1)
+# FY to calendar year (apr-dec belong to fy_year - 1)
 def _fy_to_cy_year(fy_year, month):
     return fy_year - 1 if month >= 4 else fy_year
 
@@ -68,7 +65,6 @@ CIRCLE_TO_STATE = {
 PANEL_STATES = sorted(set(CIRCLE_TO_STATE.values()))
 
 
-# cleans the area-wise tele-density CSV into a typed DataFrame
 def _clean_tele_density():
     df = pd.read_csv(DATASETS / "area-wise tele density.csv")
     df.columns = ["country", "year_raw", "month_raw", "circle", "tele_density"]
@@ -84,7 +80,7 @@ def _clean_tele_density():
     return df[["state_name", "year", "month", "date", "tele_density"]].reset_index(drop=True)
 
 
-# cleans the wired/wireless CSV and aggregates UP East + UP West
+# also aggregates UP East + UP West into one
 def _clean_wired_wireless():
     df = pd.read_csv(DATASETS / "wired, wireless telephone.csv")
     df.columns = ["country", "year_raw", "month_raw", "circle",
@@ -112,7 +108,6 @@ def _clean_wired_wireless():
                 "wireline_millions", "wireless_millions", "pct_share"]].reset_index(drop=True)
 
 
-# cleans the education GER CSV
 def _clean_education_ger():
     df = pd.read_csv(DATASETS / "education-enrolment.csv")
     df.columns = ["country", "state_name", "year_raw", "gender", "category", "ger"]
@@ -123,7 +118,6 @@ def _clean_education_ger():
     return df[["state_name", "year", "gender", "category", "ger"]].reset_index(drop=True)
 
 
-# cleans the digital transactions CSV
 def _clean_digital_transactions():
     df = pd.read_csv(DATASETS / "digital transactions.csv")
     df.columns = ["country", "year_raw", "month_raw", "ministry", "project",
@@ -137,7 +131,6 @@ def _clean_digital_transactions():
                "digital_txn_crores", "bhim_txn_crores", "debit_card_crores"]].reset_index(drop=True)
 
 
-# cleans the sector-wise electricity consumption CSV
 def _clean_electricity():
     df = pd.read_csv(DATASETS / "sector-wise electricity consumption.csv")
     df.columns = ["country", "year_raw", "sector", "additional_info",

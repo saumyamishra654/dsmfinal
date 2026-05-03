@@ -1,18 +1,4 @@
-"""
-Objective 6 — New Analytical Questions (audited & corrected)
-
-A. Competition -> Adoption: Did HHI drops drive tele-density growth? (directional only)
-B. Beta-convergence: Was the digital divide closing pre-Jio? Did it freeze after?
-C. Equity: Does connectivity differentially benefit SC/ST populations? (panel FE)
-D. Structural break robustness: Quandt-Andrews sup-Wald test
-
-Key methodological fixes applied after external audit:
-- Convergence uses log(initial) specification (standard in Barro/Sala-i-Martin)
-- Equity uses ratio (ger_scst/ger_total) not difference (avoids construct-validity issue)
-- Wild-cluster bootstrap for panel FE (18 clusters too few for asymptotic SEs)
-- Spearman/Kendall/LOO robustness for cross-sectional tests
-- Sup-Wald test addresses Chow test circularity for structural breaks
-"""
+# post-feedback fixes: log-spec convergence, ratio-based equity, wild bootstrap, sup-wald
 import sqlite3
 import pandas as pd
 import numpy as np
@@ -45,16 +31,10 @@ def get_hhi():
     return pd.read_csv(HHI_PATH)
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# ANALYSIS A: Competition → Adoption (directional, underpowered)
-# ─────────────────────────────────────────────────────────────────────────────
+# --- A: competition vs adoption (underpowered, n=18) ---
 
 def analysis_a_competition():
-    """
-    Cross-sectional OLS: HHI change (2015→2018) vs tele-density CAGR (2016→2021).
-    NOTE: tele-density DECLINES post-Jio due to SIM consolidation.
-    This tests whether competition mitigated the decline, not whether it drove growth.
-    """
+    # HHI change vs tele-density CAGR -- really just directional since n=18
     print("=" * 70)
     print("ANALYSIS A: Competition vs Tele-density Change (n=18, directional only)")
     print("=" * 70)
@@ -102,17 +82,10 @@ def analysis_a_competition():
     return merged
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# ANALYSIS B: Beta-Convergence (log-spec, with full robustness)
-# ─────────────────────────────────────────────────────────────────────────────
+# --- B: beta-convergence (log-spec, Barro/Sala-i-Martin style) ---
 
 def analysis_b_convergence():
-    """
-    Standard beta-convergence: growth_rate = alpha + beta * log(initial_level).
-    Negative beta = convergence. Uses log specification per Barro & Sala-i-Martin.
-    Period 1 (2013-2016): growth era, tele-density valid.
-    Period 2 (2017-2022): tele-density for comparability (also tested with subscribers).
-    """
+    # negative beta = states were catching up; test pre vs post Jio
     print("\n" + "=" * 70)
     print("ANALYSIS B: Beta-Convergence (log specification)")
     print("=" * 70)
@@ -204,16 +177,10 @@ def analysis_b_convergence():
     return {"pre_p_ols": p1, "pre_p_spearman": sp_p1, "post_p_ols": p2}
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# ANALYSIS C: SC/ST Inclusion (ratio-based, with wild-cluster bootstrap)
-# ─────────────────────────────────────────────────────────────────────────────
+# --- C: SC/ST inclusion ratio (wild-cluster bootstrap bc only 18 clusters) ---
 
 def analysis_c_equity():
-    """
-    Panel FE: does tele-density(t-1) predict the SC/ST inclusion ratio?
-    inclusion_ratio = ger_scst / ger_total (closer to 1 = more equal).
-    Uses wild-cluster bootstrap for inference (18 clusters too few for asymptotic).
-    """
+    # panel FE on inclusion_ratio = ger_scst/ger_total
     print("\n" + "=" * 70)
     print("ANALYSIS C: SC/ST Inclusion Ratio (panel FE + wild-cluster bootstrap)")
     print("=" * 70)
@@ -311,16 +278,10 @@ def analysis_c_equity():
     return {"coef": coef, "asym_p": asym_p, "wild_p": wild_p}
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# ANALYSIS D: Structural Break Robustness (Quandt-Andrews sup-Wald)
-# ─────────────────────────────────────────────────────────────────────────────
+# --- D: sup-Wald to fix the chow test circularity issue ---
 
 def analysis_d_supwald():
-    """
-    Addresses circularity in Chow test (breakpoint found from data, then tested
-    as if known). Uses Quandt-Andrews sup-Wald: tests ALL possible breakpoints,
-    takes the maximum F-stat, compares to Andrews (1993) critical values.
-    """
+    # tests all possible breakpoints, takes max F, compares to Andrews (1993) CVs
     print("\n" + "=" * 70)
     print("ANALYSIS D: Structural Break Robustness (Quandt-Andrews Sup-Wald)")
     print("=" * 70)
