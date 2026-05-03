@@ -20,7 +20,7 @@ MONGO_URI = "mongodb://localhost:27017"
 DB_NAME = "dsm"
 
 
-# gets wireless subscriber time series from MongoDB (2008-2021).
+# grabs national wireless time series from mongo
 def get_national_wireless_ts(db=None):
     if db is None:
         client = MongoClient(MONGO_URI)
@@ -46,14 +46,13 @@ def get_national_wireless_ts(db=None):
     return df.sort_values("date").reset_index(drop=True)
 
 
-# detects structural breakpoints
 def detect_structural_breaks(series, n_bkps=2):
     algo = rpt.Binseg(model="l2", min_size=12).fit(series)
     result = algo.predict(n_bkps=n_bkps)
     return result[:-1]
 
 
-# chow test to check for statistical significance
+# chow test for break significance
 def chow_test(y, break_idx):
     n = len(y)
     x = np.arange(n)
@@ -77,14 +76,13 @@ def chow_test(y, break_idx):
     return f_stat, p_value
 
 
-# compound annual growth rate
 def compute_cagr(start_val, end_val, years):
     if start_val <= 0 or years <= 0:
         return float("nan")
     return (end_val / start_val) ** (1 / years) - 1
 
 
-# pre/post-break CAGR per state from MongoDB
+# pre/post-break CAGR per state
 def get_state_growth_rates(db, break_year, break_month):
     pipeline = [
         {"$match": {"wireless_subscribers": {"$exists": True}}},
@@ -132,7 +130,7 @@ def get_state_growth_rates(db, break_year, break_month):
     return pd.DataFrame(results).sort_values("acceleration", ascending=False).reset_index(drop=True)
 
 
-# herfindahl-hirschman index per state per year from MongoDB
+# HHI per state per year
 def compute_hhi(db):
     pipeline = [
         {"$match": {"wireless_subscribers": {"$exists": True}}},
@@ -166,7 +164,7 @@ def compute_hhi(db):
     return pd.DataFrame(rows)
 
 
-# national provider market share by year
+# market share by provider per year
 def get_provider_shares(db):
     pipeline = [
         {"$match": {"wireless_subscribers": {"$exists": True}}},
@@ -198,7 +196,6 @@ def get_provider_shares(db):
     return result
 
 
-# line chart of national wireless subscribers with structural breaks
 def plot_national_wireless(ts, break_dates):
     fig, ax = plt.subplots(figsize=(12, 6))
     ax.plot(ts["date"], ts["total_wireless"] / 1e6, linewidth=2, color="#1f77b4")
@@ -224,7 +221,6 @@ def plot_national_wireless(ts, break_dates):
     print(f"  Saved obj1_national_wireless.png")
 
 
-# horizontal bar chart of pre/post CAGR by state
 def plot_state_growth_ranking(df):
     top = df.head(15)
     fig, ax = plt.subplots(figsize=(10, 8))
@@ -245,7 +241,6 @@ def plot_state_growth_ranking(df):
     print(f"  Saved obj1_state_growth_ranking.png")
 
 
-# national average HHI over years with competition thresholds
 def plot_hhi_over_time(hhi_df, break_year):
     national_hhi = hhi_df.groupby("year")["hhi"].mean().reset_index()
 
@@ -267,7 +262,6 @@ def plot_hhi_over_time(hhi_df, break_year):
     print(f"  Saved obj1_hhi_over_time.png")
 
 
-# stacked area chart of provider market shares
 def plot_provider_market_share(shares):
     fig, ax = plt.subplots(figsize=(12, 6))
     colors = sns.color_palette("tab10", n_colors=len(shares.columns))

@@ -11,7 +11,7 @@ OUT_DIR = ROOT / "outputs" / "figures"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 
-# loads tele-density and GER data and joins them into one panel
+# load + join tele-density and GER into panel
 def load_panel():
     con = sqlite3.connect(DB_PATH)
 
@@ -49,14 +49,14 @@ def load_panel():
     return panel.sort_values(["state", "year"]).reset_index(drop=True)
 
 
-# adds tele_density_lag1 = tele_density at (t-1) for each state
+# one-year lag per state
 def add_lag(panel):
     panel = panel.copy()
     panel["tele_density_lag1"] = panel.groupby("state")["tele_density"].shift(1)
     return panel.dropna(subset=["tele_density_lag1"]).reset_index(drop=True)
 
 
-# pearson correlation between tele-density and total GER per year
+# pearson r per year
 def yearly_correlation(panel):
     rows = []
     for year, grp in panel.groupby("year"):
@@ -67,7 +67,7 @@ def yearly_correlation(panel):
     return pd.DataFrame(rows)
 
 
-# two-way FE panel regression of dep_var on lagged tele-density
+# two-way FE regression
 def run_regression(panel, dep_var):
     df = panel.dropna(subset=[dep_var, "tele_density_lag1"]).copy()
     df = df.set_index(["state", "year"])
@@ -91,7 +91,6 @@ def run_regression(panel, dep_var):
     }
 
 
-# scatter of tele-density vs GER with OLS fit line
 def plot_scatter(panel):
     valid = panel.dropna(subset=["tele_density", "ger_total"])
     m, b  = np.polyfit(valid["tele_density"], valid["ger_total"], 1)
@@ -111,7 +110,6 @@ def plot_scatter(panel):
     print("  Saved obj2_scatter.png")
 
 
-# yearly pearson r line plot with Jio annotation
 def plot_correlation_over_time(corr_df):
     fig, ax = plt.subplots(figsize=(8, 4))
     ax.plot(corr_df["year"], corr_df["pearson_r"],
@@ -128,7 +126,6 @@ def plot_correlation_over_time(corr_df):
     print("  Saved obj2_correlation_over_time.png")
 
 
-# horizontal bar chart of regression coefficients with 95% CI
 def plot_coefficients(results):
     labels = {"ger_total": "Total GER", "ger_female": "Female GER", "ger_scst": "SC/ST GER"}
     names  = [labels[r["dep_var"]] for r in results]
@@ -148,12 +145,10 @@ def plot_coefficients(results):
     print("  Saved obj2_regression_coefficients.png")
 
 
-# returns the full panel (no lag) for use in the dashboard
 def get_panel():
     return load_panel()
 
 
-# runs all three regressions and returns results list for the dashboard
 def get_regression_results():
     panel = add_lag(load_panel())
     return [run_regression(panel, dep) for dep in ["ger_total", "ger_female", "ger_scst"]]
@@ -163,7 +158,7 @@ def get_yearly_correlation():
     return yearly_correlation(load_panel())
 
 
-# does connectivity NARROW the gender/caste enrollment gap?
+# check if connectivity narrows gender/caste gaps
 def run_equity_gap_regressions(panel):
     con = sqlite3.connect(DB_PATH)
     male = pd.read_sql_query("""
@@ -206,7 +201,7 @@ def run_equity_gap_regressions(panel):
     return results
 
 
-# does tele-density have diminishing returns on GER? (quadratic term)
+# quadratic term to check for diminishing returns
 def run_quadratic_regression(panel):
     df = panel.dropna(subset=["ger_total", "tele_density_lag1"]).copy()
     df["td_lag1_sq"] = df["tele_density_lag1"] ** 2
@@ -265,13 +260,13 @@ if __name__ == "__main__":
         print(f"  {r['label']}:")
         print(f"    beta = {r['coef']:.4f}  SE = {r['std_err']:.4f}  t = {r['t_stat']:.3f}  p = {r['p_value']:.4f} {sig}")
         if r["dep_var"] == "gender_gap":
-            # gender_gap = female - male; positive coef = female gaining
+            # positive coef = female gaining relative to male
             if r["coef"] > 0:
                 print(f"    -> Connectivity NARROWS gender gap (women gain relative to men)")
             else:
                 print(f"    -> Connectivity WIDENS gender gap")
         else:
-            # caste_gap = total - scst; positive coef = gap widening (general pulls ahead)
+            # positive = gap widening (general pulls ahead of SC/ST)
             if r["coef"] > 0:
                 print(f"    -> Connectivity WIDENS caste gap (general population benefits more than SC/ST)")
             else:

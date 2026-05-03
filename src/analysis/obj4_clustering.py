@@ -17,7 +17,7 @@ OUT_DIR = ROOT / "outputs" / "figures"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 
-# builds one row per state with mean and slope features for tele-density and GER
+# one row per state: mean + slope for tele-density and GER
 def build_features():
     con = sqlite3.connect(DB_PATH)
 
@@ -57,7 +57,7 @@ def build_features():
     return features.reset_index(drop=True)
 
 
-# standardizes features and runs k-means with silhouette score to pick k
+# k-means with silhouette to pick best k
 def run_kmeans(features):
     X = features[["mean_tele_density", "tele_density_slope", "mean_ger", "ger_slope"]].values
     X_scaled = StandardScaler().fit_transform(X)
@@ -76,7 +76,7 @@ def run_kmeans(features):
     return features, best_k
 
 
-# builds a cosine-similarity graph and runs Louvain community detection
+# cosine-similarity graph + louvain communities
 def run_louvain(features):
     X = features[["mean_tele_density", "tele_density_slope", "mean_ger", "ger_slope"]].values
     X_scaled = StandardScaler().fit_transform(X)
@@ -103,7 +103,6 @@ def run_louvain(features):
     return features, G, partition
 
 
-# PCA biplot of states colored by k-means cluster with feature loading arrows
 def plot_pca_biplot(features):
     feat_cols = ["mean_tele_density", "tele_density_slope", "mean_ger", "ger_slope"]
     X        = features[feat_cols].values
@@ -144,7 +143,6 @@ def plot_pca_biplot(features):
     print("  Saved obj4_pca_biplot.png")
 
 
-# spring-layout graph of Louvain communities with edges above median weight
 def plot_louvain_graph(features, G, partition):
     communities  = features["louvain_community"].unique()
     color_map    = cm.tab10(np.linspace(0, 1, len(communities)))
@@ -171,7 +169,6 @@ def plot_louvain_graph(features, G, partition):
     print("  Saved obj4_louvain_graph.png")
 
 
-# bar chart of mean feature values per k-means cluster
 def plot_cluster_profiles(features):
     feat_cols   = ["mean_tele_density", "tele_density_slope", "mean_ger", "ger_slope"]
     feat_labels = ["Mean Tele-density", "Tele-density Slope", "Mean GER", "GER Slope"]
@@ -204,7 +201,7 @@ def plot_cluster_profiles(features):
     print("  Saved obj4_cluster_profiles.png")
 
 
-# forward-looking gap from each laggard state to the leader community mean
+# how long till laggard states catch up to leaders
 def gap_analysis(features):
     comm_means    = features.groupby("louvain_community")["mean_tele_density"].mean()
     leader_comm   = comm_means.idxmax()
@@ -234,14 +231,13 @@ def gap_analysis(features):
     return pd.DataFrame(rows).sort_values("years_to_close_gap", ascending=False)
 
 
-# full feature matrix with kmeans_cluster and louvain_community columns
 def get_cluster_data():
     features, _  = run_kmeans(build_features())
     features, *_ = run_louvain(features)
     return features
 
 
-# returns (G, partition, pos) for building an interactive Plotly network graph
+# for the plotly interactive graph in the dashboard
 def get_louvain_graph(features):
     X        = features[["mean_tele_density", "tele_density_slope",
                           "mean_ger", "ger_slope"]].values
@@ -265,7 +261,6 @@ def get_louvain_graph(features):
     return G, partition, pos
 
 
-# wrapper so dashboard can call gap_analysis without re-running clustering
 def get_gap_analysis(features):
     return gap_analysis(features)
 

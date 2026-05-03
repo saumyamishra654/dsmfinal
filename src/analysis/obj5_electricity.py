@@ -19,7 +19,6 @@ DB_PATH = ROOT / "db" / "sqlite" / "dsm.db"
 FIGURES = ROOT / "outputs" / "figures"
 
 
-# annual domestic+commercial electricity consumption from SQLite
 def get_electricity_domestic_commercial():
     con = sqlite3.connect(DB_PATH)
     df = pd.read_sql("""
@@ -33,7 +32,6 @@ def get_electricity_domestic_commercial():
     return df
 
 
-# annual national wireless subscribers from MongoDB (2008-2021)
 def get_national_wireless_annual():
     ts = get_national_wireless_ts()
     annual = ts.groupby("year")["total_wireless"].mean().reset_index()
@@ -41,7 +39,6 @@ def get_national_wireless_annual():
     return annual
 
 
-# annual average digital transaction volume from SQLite
 def get_digital_txn_annual():
     con = sqlite3.connect(DB_PATH)
     df = pd.read_sql("""
@@ -54,7 +51,6 @@ def get_digital_txn_annual():
     return df
 
 
-# min-max normalization to [0, 1]
 def normalize_series(s):
     smin, smax = s.min(), s.max()
     if smax == smin:

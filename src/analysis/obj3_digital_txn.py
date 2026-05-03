@@ -18,7 +18,6 @@ DB_PATH = ROOT / "db" / "sqlite" / "dsm.db"
 FIGURES = ROOT / "outputs" / "figures"
 
 
-# loads digital transactions from SQLite
 def get_digital_transactions():
     con = sqlite3.connect(DB_PATH)
     df = pd.read_sql("""
@@ -32,7 +31,7 @@ def get_digital_transactions():
     return df
 
 
-# national wireless subscribers from SQLite wired_wireless (2017-2023)
+# wireless subs for the granger test
 def get_wireless_for_granger():
     con = sqlite3.connect(DB_PATH)
     df = pd.read_sql("""
@@ -47,7 +46,6 @@ def get_wireless_for_granger():
     return df
 
 
-# computes UPI/BHIM, debit card, and other payment shares
 def compute_payment_shares(df):
     df = df.copy()
     df["upi_share"] = df["bhim_txn_crores"] / df["digital_txn_crores"]
@@ -56,7 +54,6 @@ def compute_payment_shares(df):
     return df
 
 
-# runs STL decomposition on the digital transaction time series
 def run_stl(df):
     ts = df.set_index("date")["digital_txn_crores"].copy()
     ts = ts.asfreq("MS")
@@ -65,7 +62,7 @@ def run_stl(df):
     return stl.fit()
 
 
-# tests if wireless subscriber growth Granger-causes digital txn growth
+# granger test: does wireless growth cause txn growth?
 def granger_causality(wireless_df, txn_df, max_lag=4):
     merged = pd.merge(
         wireless_df[["year", "month", "national_wireless"]],
@@ -97,7 +94,6 @@ def granger_causality(wireless_df, txn_df, max_lag=4):
     return results
 
 
-# 4-panel STL decomposition plot with COVID annotation
 def plot_stl_decomposition(stl_result, figures_dir):
     fig, axes = plt.subplots(4, 1, figsize=(12, 10), sharex=True)
     covid_date = pd.Timestamp("2020-03-01")
@@ -126,7 +122,6 @@ def plot_stl_decomposition(stl_result, figures_dir):
     print(f"  Saved obj3_stl_decomposition.png")
 
 
-# stacked area chart of payment method shares
 def plot_payment_shares(df, figures_dir):
     fig, ax = plt.subplots(figsize=(12, 6))
     ax.stackplot(
@@ -153,7 +148,6 @@ def plot_payment_shares(df, figures_dir):
     print(f"  Saved obj3_payment_shares.png")
 
 
-# bar chart of Granger causality F-statistics by lag
 def plot_granger_results(results, figures_dir):
     if not results:
         print("  Skipping Granger plot (no results)")
