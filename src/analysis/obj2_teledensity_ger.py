@@ -163,6 +163,74 @@ def get_yearly_correlation():
     return yearly_correlation(load_panel())
 
 
+# does connectivity NARROW the gender/caste enrollment gap?
+def run_equity_gap_regressions(panel):
+    con = sqlite3.connect(DB_PATH)
+    male = pd.read_sql_query("""
+        SELECT s.state_name AS state, e.year, e.ger AS ger_male
+        FROM education_ger e
+        JOIN states s USING (state_id)
+        WHERE e.gender = 'Male' AND e.category = 'All Categories' AND e.ger IS NOT NULL
+    """, con)
+    con.close()
+
+    panel_full = panel.merge(male, on=["state", "year"], how="left")
+    panel_full["gender_gap"] = panel_full["ger_female"] - panel_full["ger_male"]
+    panel_full["caste_gap"] = panel_full["ger_total"] - panel_full["ger_scst"]
+
+    results = []
+    for dep_var, label in [("gender_gap", "Gender Gap (F-M)"), ("caste_gap", "Caste Gap (Total-SC/ST)")]:
+        df = panel_full.dropna(subset=[dep_var, "tele_density_lag1"]).copy()
+        if len(df) < 20:
+            print(f"  {label}: insufficient data ({len(df)} obs)")
+            continue
+        df_idx = df.set_index(["state", "year"])
+        res = PanelOLS(
+            dependent=df_idx[dep_var],
+            exog=df_idx[["tele_density_lag1"]],
+            entity_effects=True,
+            time_effects=True,
+        ).fit(cov_type="clustered", cluster_entity=True)
+
+        r = {
+            "dep_var": dep_var,
+            "label": label,
+            "coef": float(res.params["tele_density_lag1"]),
+            "std_err": float(res.std_errors["tele_density_lag1"]),
+            "t_stat": float(res.tstats["tele_density_lag1"]),
+            "p_value": float(res.pvalues["tele_density_lag1"]),
+            "r2_within": float(res.rsquared_within),
+            "n_obs": int(res.nobs),
+        }
+        results.append(r)
+    return results
+
+
+# does tele-density have diminishing returns on GER? (quadratic term)
+def run_quadratic_regression(panel):
+    df = panel.dropna(subset=["ger_total", "tele_density_lag1"]).copy()
+    df["td_lag1_sq"] = df["tele_density_lag1"] ** 2
+    df_idx = df.set_index(["state", "year"])
+
+    res = PanelOLS(
+        dependent=df_idx["ger_total"],
+        exog=df_idx[["tele_density_lag1", "td_lag1_sq"]],
+        entity_effects=True,
+        time_effects=True,
+    ).fit(cov_type="clustered", cluster_entity=True)
+
+    return {
+        "linear_coef": float(res.params["tele_density_lag1"]),
+        "quad_coef": float(res.params["td_lag1_sq"]),
+        "linear_p": float(res.pvalues["tele_density_lag1"]),
+        "quad_p": float(res.pvalues["td_lag1_sq"]),
+        "linear_se": float(res.std_errors["tele_density_lag1"]),
+        "quad_se": float(res.std_errors["td_lag1_sq"]),
+        "r2_within": float(res.rsquared_within),
+        "n_obs": int(res.nobs),
+    }
+
+
 if __name__ == "__main__":
     print("Loading panel...")
     panel     = load_panel()
@@ -190,7 +258,41 @@ if __name__ == "__main__":
         print(f"  R²(within) = {r['r2_within']}  N = {r['n_obs']}  States = {r['n_states']}")
         print()
 
-    print("Generating plots...")
+    print("--- NEW: Equity Gap Regressions ---")
+    equity_results = run_equity_gap_regressions(panel_lag)
+    for r in equity_results:
+        sig = "***" if r["p_value"] < 0.01 else "**" if r["p_value"] < 0.05 else "*" if r["p_value"] < 0.1 else ""
+        print(f"  {r['label']}:")
+        print(f"    beta = {r['coef']:.4f}  SE = {r['std_err']:.4f}  t = {r['t_stat']:.3f}  p = {r['p_value']:.4f} {sig}")
+        if r["dep_var"] == "gender_gap":
+            # gender_gap = female - male; positive coef = female gaining
+            if r["coef"] > 0:
+                print(f"    -> Connectivity NARROWS gender gap (women gain relative to men)")
+            else:
+                print(f"    -> Connectivity WIDENS gender gap")
+        else:
+            # caste_gap = total - scst; positive coef = gap widening (general pulls ahead)
+            if r["coef"] > 0:
+                print(f"    -> Connectivity WIDENS caste gap (general population benefits more than SC/ST)")
+            else:
+                print(f"    -> Connectivity NARROWS caste gap (SC/ST catching up)")
+    print()
+
+    print("--- NEW: Nonlinearity Test (Quadratic) ---")
+    quad = run_quadratic_regression(panel_lag)
+    print(f"  Linear coef: {quad['linear_coef']:.4f} (SE={quad['linear_se']:.4f}, p={quad['linear_p']:.4f})")
+    print(f"  Quadratic coef: {quad['quad_coef']:.6f} (SE={quad['quad_se']:.6f}, p={quad['quad_p']:.4f})")
+    if quad["quad_p"] < 0.05:
+        if quad["quad_coef"] < 0:
+            print(f"  -> Significant DIMINISHING RETURNS: effect saturates at high connectivity")
+            turning_point = -quad["linear_coef"] / (2 * quad["quad_coef"])
+            print(f"  -> Turning point at tele-density = {turning_point:.1f}")
+        else:
+            print(f"  -> Significant ACCELERATING returns")
+    else:
+        print(f"  -> No significant nonlinearity -- linear model is adequate")
+
+    print("\nGenerating plots...")
     plot_scatter(panel)
     plot_correlation_over_time(corr)
     plot_coefficients(results)
