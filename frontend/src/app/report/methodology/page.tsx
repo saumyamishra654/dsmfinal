@@ -249,6 +249,52 @@ export default function MethodologyPage() {
         computing environment.
       </p>
 
+      <h2>References &amp; Data Citations</h2>
+
+      <h3>Datasets</h3>
+
+      <ol>
+        <li>
+          <strong>TRAI.</strong> &quot;Indian Telecom Services Performance Indicators.&quot; Quarterly reports, 2008-2023.
+          <a href="https://www.trai.gov.in/release-publication/reports/performance-indicators-reports" target="_blank" rel="noopener noreferrer">
+            trai.gov.in/release-publication/reports
+          </a>
+        </li>
+        <li>
+          <strong>Ministry of Education, Government of India.</strong> &quot;All India Survey on Higher Education (AISHE).&quot; Annual reports, 2012-2021.
+          <a href="https://aishe.gov.in/" target="_blank" rel="noopener noreferrer">
+            aishe.gov.in
+          </a>
+        </li>
+        <li>
+          <strong>Reserve Bank of India (RBI).</strong> &quot;Digital Payments Statistics.&quot; Monthly data, 2016-2021.
+          <a href="https://www.rbi.org.in/Scripts/Statistics.aspx" target="_blank" rel="noopener noreferrer">
+            rbi.org.in/Scripts/Statistics
+          </a>
+        </li>
+        <li>
+          <strong>Central Electricity Authority (CEA).</strong> &quot;Growth of Electricity Sector in India from 1947-2023.&quot;
+          <a href="https://cea.nic.in/" target="_blank" rel="noopener noreferrer">
+            cea.nic.in
+          </a>
+        </li>
+      </ol>
+
+      <h3>Statistical Methods</h3>
+
+      <ol>
+        <li>Andrews, D. W. K. (1993). &quot;Tests for Parameter Instability and Structural Change with Unknown Change Point.&quot; <em>Econometrica</em>, 61(4), 821-856.</li>
+        <li>Barro, R. J., &amp; Sala-i-Martin, X. (1992). &quot;Convergence.&quot; <em>Journal of Political Economy</em>, 100(2), 223-251.</li>
+        <li>Cameron, A. C., Gelbach, J. B., &amp; Miller, D. L. (2008). &quot;Bootstrap-Based Improvements for Inference with Clustered Errors.&quot; <em>Review of Economics and Statistics</em>, 90(3), 414-427.</li>
+        <li>Blondel, V. D., Guillaume, J. L., Lambiotte, R., &amp; Lefebvre, E. (2008). &quot;Fast unfolding of communities in large networks.&quot; <em>Journal of Statistical Mechanics</em>, P10008.</li>
+      </ol>
+
+      <h3>Software</h3>
+
+      <p>
+        Python 3.12, pandas, numpy, scipy, statsmodels, scikit-learn, networkx, ruptures, plotly, streamlit, FastAPI, Next.js, react-plotly.js.
+      </p>
+
     </article>
   );
 }

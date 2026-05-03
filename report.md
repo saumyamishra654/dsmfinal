@@ -372,3 +372,33 @@ The same states that lag on connectivity also lag on education enrollment. The c
 India's digital transformation has been faster than almost anywhere else in the world. But it has not been even. The convergence that was occurring pre-Jio stopped after market consolidation. The same states that lag on connectivity also lag on education enrolment, and at current growth rates that gap is not going to close in any reasonable time horizon.
 
 Connectivity expansion alone is not enough. The real policy question is not whether to keep expanding connectivity, but how to ensure lagging states benefit at the same rate as leaders -- through targeted infrastructure investment, mandatory rural rollout obligations, or direct device and data subsidies. Without such interventions, the digital divide will remain structurally locked for generations.
+
+---
+
+## References & Data Citations
+
+### Datasets
+
+1. **Telecom Regulatory Authority of India (TRAI).** "Indian Telecom Services Performance Indicators." Quarterly reports, 2008-2023. Available at: https://www.trai.gov.in/release-publication/reports/performance-indicators-reports
+
+2. **Telecom Regulatory Authority of India (TRAI).** "The Indian Telecom Services Performance Indicators (Area-wise Tele-density)." 2013-2023. Available at: https://www.trai.gov.in/release-publication/reports/performance-indicators-reports
+
+3. **Ministry of Education, Government of India.** "All India Survey on Higher Education (AISHE)." Annual reports, 2012-2021. Available at: https://aishe.gov.in/
+
+4. **Reserve Bank of India (RBI).** "Digital Payments Statistics." Monthly data, 2016-2021. Available at: https://www.rbi.org.in/Scripts/Statistics.aspx
+
+5. **Central Electricity Authority (CEA).** "Growth of Electricity Sector in India from 1947-2023." Available at: https://cea.nic.in/
+
+### Statistical Methods
+
+6. Andrews, D. W. K. (1993). "Tests for Parameter Instability and Structural Change with Unknown Change Point." *Econometrica*, 61(4), 821-856.
+
+7. Barro, R. J., & Sala-i-Martin, X. (1992). "Convergence." *Journal of Political Economy*, 100(2), 223-251.
+
+8. Cameron, A. C., Gelbach, J. B., & Miller, D. L. (2008). "Bootstrap-Based Improvements for Inference with Clustered Errors." *Review of Economics and Statistics*, 90(3), 414-427.
+
+9. Blondel, V. D., Guillaume, J. L., Lambiotte, R., & Lefebvre, E. (2008). "Fast unfolding of communities in large networks." *Journal of Statistical Mechanics*, P10008.
+
+### Software
+
+10. Python 3.12, pandas, numpy, scipy, statsmodels, scikit-learn, networkx, ruptures, plotly, streamlit, FastAPI, Next.js.
