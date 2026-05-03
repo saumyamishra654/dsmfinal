@@ -280,20 +280,6 @@ export default function MethodologyPage() {
         </li>
       </ol>
 
-      <h3>Statistical Methods</h3>
-
-      <ol>
-        <li>Andrews, D. W. K. (1993). &quot;Tests for Parameter Instability and Structural Change with Unknown Change Point.&quot; <em>Econometrica</em>, 61(4), 821-856.</li>
-        <li>Barro, R. J., &amp; Sala-i-Martin, X. (1992). &quot;Convergence.&quot; <em>Journal of Political Economy</em>, 100(2), 223-251.</li>
-        <li>Cameron, A. C., Gelbach, J. B., &amp; Miller, D. L. (2008). &quot;Bootstrap-Based Improvements for Inference with Clustered Errors.&quot; <em>Review of Economics and Statistics</em>, 90(3), 414-427.</li>
-        <li>Blondel, V. D., Guillaume, J. L., Lambiotte, R., &amp; Lefebvre, E. (2008). &quot;Fast unfolding of communities in large networks.&quot; <em>Journal of Statistical Mechanics</em>, P10008.</li>
-      </ol>
-
-      <h3>Software</h3>
-
-      <p>
-        Python 3.12, pandas, numpy, scipy, statsmodels, scikit-learn, networkx, ruptures, plotly, streamlit, FastAPI, Next.js, react-plotly.js.
-      </p>
 
     </article>
   );
